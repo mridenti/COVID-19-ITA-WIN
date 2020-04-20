@@ -2,6 +2,8 @@
 import numpy as np
 import csv
 import os
+import sys
+import argparse
 from scipy.sparse.linalg import eigs
 
 
@@ -10,24 +12,41 @@ def symmetrize(matrix_C, PP, age_n):
     c_m = np.zeros([age_n, age_n])
     for ii in range(0, age_n):
         for jj in range(0, age_n):
-            c_m[ii, jj] = 0.5*(matrix_C[ii, jj] * PP[ii] / PP[jj] + matrix_C[jj, ii] * PP[jj] / PP[ii])
+            c_m[ii, jj] = 0.5 * (matrix_C[ii, jj] * PP[ii] / PP[jj] + matrix_C[jj, ii] * PP[jj] / PP[ii])
     return c_m
 
 
+##### Process comand line options
 ##### Variable parameters, for error estimation within reasonable bounds
-I_0 = 50.0  # Total initial infected individuals
-R0 = 8.0  # Reproduction number
-#####
-##### Model Flag
-# 0: SIR
-# 1: SEIR
-# 2: SEAIR
-# 3: SEAHIR
-model = 3
+parser = argparse.ArgumentParser(description='This script computes the scenario matrices and other inputs for '
+                                             'csv_to_input.')
+parser.add_argument('-i', '--input_file', help='Input file name', required=True)
+parser.add_argument('-d', '--day', type=int, nargs=4, help='Days of measure beginning - four values required, ' 
+                    'otherwise use default', required=True)
+parser.add_argument('-m', '--model', type=int, help='(0) SIR, (1) SEIR, (2) SEAIR, (3) SEAHIR - default is SEAHIR ',
+                    required=True)
+parser.add_argument('-I0', '--I0_value', type=int, help='Number of initial infected', required=True)
+parser.add_argument('-R0', '--R0_value', type=float, help='Multiplication number', required=True)
+args = parser.parse_args()
+
+## show values ##
+print ("Input file: %s" % args.input_file)
+print ("Days: %s" % args.day)
+print ("Model: %s" % args.model)
+print ("I0: %s" % args.I0_value)
+print ("R0: %s" % args.R0_value)
+
+I_0 = int(args.I0_value)
+R0 = float(args.R0_value)
+model = int(args.model)
+day_init = int(args.day[0])
+day_next_1 = int(args.day[1])
+day_next_2 = int(args.day[2])
+day_next_3 = int(args.day[3])
+input_folder = args.input_file
 
 age_strata = 16
 t_days = 400
-input_folder = 'cenarioSP'
 demographic_file = 'demographic_data.csv'
 epidemiologic_file = 'epidemiology_data.csv'
 contact_matrix_all_file = 'contact_matrix_all.csv'
@@ -239,12 +258,12 @@ for i in range(0, age_strata):
         C_sym_other[i, j] = C_sym_other[i, j] * pop[i] / pop[j]
 w, v = eigs(C_sym)
 # Main eigenvector is normalized, norm_vec = 1. Mean square_vec=1/age_strata
-#print(w.max())
-#eig_vec = v[:, 0]
-#print(v[:, 0])
-#norm_vec = np.dot(eig_vec, eig_vec)
-#square_vec = np.multiply(eig_vec, eig_vec)
-#print(np.mean(norm_vec), 1./16.)
+# print(w.max())
+# eig_vec = v[:, 0]
+# print(v[:, 0])
+# norm_vec = np.dot(eig_vec, eig_vec)
+# square_vec = np.multiply(eig_vec, eig_vec)
+# print(np.mean(norm_vec), 1./16.)
 eig_value = np.real(w.max())
 if model == 2 or 3:
     beta = R0 * gamma[0] / (rho.max() + np.mean(alpha) * (1 - rho.max())) / eig_value
@@ -263,7 +282,7 @@ if model == 2 or model == 3:
     beta_val = R0_post * gamma[0] / (rho.max() + np.mean(alpha) * (1 - rho.max()))
 else:
     beta = R0 * gamma[0]
-epi_f = 0.8 # protection decrease of transmission probability
+epi_f = 0.8  # protection decrease of transmission probability
 C_home_post = epi_f * beta * C_sym_home * age_strata
 C_work_post = epi_f * beta * C_sym_work * age_strata
 C_school_post = epi_f * beta * C_sym_school * age_strata
@@ -339,10 +358,6 @@ beta_gama_header = ['DAY', 'GAMA_F1', 'GAMA_F2', 'GAMA_F3', 'GAMA_F4', 'GAMA_F5'
                     'BETA_MATRIX', 'BETA_MATRIX', 'BETA_MATRIX', 'BETA_MATRIX']
 space_16 = ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']
 
-day_init = 0
-day_next_1 = 24
-day_next_2 = 75
-day_next_3 = 200
 with open('beta_gama.csv', 'wb') as csvfile:
     spamwriter = csv.writer(csvfile)
     spamwriter.writerow(beta_gama_header)
@@ -366,9 +381,9 @@ with open('beta_gama.csv', 'wb') as csvfile:
     spamwriter.writerow(np.concatenate(([''], space_16, space_16)))
     for i in range(0, age_strata):
         if i == 0:
-            spamwriter.writerow(np.concatenate(([day_next_3], gamma, C_all_post[i, :]/epi_f)))
+            spamwriter.writerow(np.concatenate(([day_next_3], gamma, C_all_post[i, :] / epi_f)))
         else:
-            spamwriter.writerow(np.concatenate(([day_next_3], space_16, C_all_post[i, :]/epi_f)))
+            spamwriter.writerow(np.concatenate(([day_next_3], space_16, C_all_post[i, :] / epi_f)))
 
 print(u'Voltando para o diretório de script')
 os.chdir("..")
