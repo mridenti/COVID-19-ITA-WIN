@@ -16,13 +16,13 @@ def symmetrize(matrix_C, PP, age_n):
     return c_m
 
 
-##### Process comand line options
+##### Process command line options
 ##### Variable parameters, for error estimation within reasonable bounds
 parser = argparse.ArgumentParser(description='This script computes the scenario matrices and other inputs for '
                                              'csv_to_input.')
 parser.add_argument('-i', '--input_file', help='Input file name', required=True)
-parser.add_argument('-d', '--day', type=int, nargs=4, help='Days of measure beginning - four values required, ' 
-                    'otherwise use default', required=True)
+parser.add_argument('-d', '--day', type=int, nargs=4, help='Days of measure beginning - four values required',
+                    required=True)
 parser.add_argument('-m', '--model', type=int, help='(0) SIR, (1) SEIR, (2) SEAIR, (3) SEAHIR - default is SEAHIR ',
                     required=True)
 parser.add_argument('-I0', '--I0_value', type=int, help='Number of initial infected', required=True)

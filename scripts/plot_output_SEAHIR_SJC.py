@@ -2,18 +2,34 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import csv
+import argparse
 import os
 
+##### Process command line options
+##### Variable parameters, for error estimation within reasonable bounds
+parser = argparse.ArgumentParser(description=u'This script plots the results for São José dos Campos.')
+parser.add_argument('-d', '--day', type=int, nargs=4, help='Days of measure beginning - four values required ',
+                    required=True)
+parser.add_argument('-s', '--scale_factor', type=int, help='Scale factor accounting for under notification ',
+                    required=True)
+args = parser.parse_args()
+
+## show values ##
+print ("Days: %s" % args.day)
+print ("Scale factor accounting for under notification: %s" % args.scale_factor)
+
+s_0 = int(args.scale_factor)
+
 # Limite entre cenários
-day_init = 0
-day_next_1 = 10
-day_next_2 = 95
-day_next_3 = 200
+day_init = int(args.day[0])
+day_next_1 = int(args.day[1])
+day_next_2 = int(args.day[2])
+day_next_3 = int(args.day[3])
 
 t_days = 400
 age_strata = 16
 compartments = 11
-leitos = 202
+leitos = 280
 output_file = 'result_data.csv'
 
 # Dados de infectados atuais no Estado de São Paulo
@@ -22,7 +38,7 @@ CData = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2,
 
 tData = np.linspace(0, YData.size - 1, YData.size)
 cData = np.linspace(0, CData.size - 1, CData.size)
-YData = 50*YData
+YData = s_0*YData
 
 s = np.zeros([t_days, age_strata], dtype=np.float64)
 e = np.zeros([t_days, age_strata], dtype=np.float64)
@@ -164,7 +180,7 @@ else:
     textstr = '\n'.join([r'$Max(H)=%.2e$' % (max_H,), r'$Max(L)=%.2e$' % (max_L,), r'$Max(I)=%.2e$' % (max_I,),
                          r'$t(max(I))=%.f$ dias' % (t_max_I,),
                          r'$t(max(L))=%.f$ dias' % (t_max_L,),
-                         r'$t(colapso)=inf ',
+                         r'$t(colapso)=$inf ',
                          r'Obitos estimados $=%.2e$' % (max_C,),
                          'dia zero: 18/03'])
 
