@@ -1,0 +1,1 @@
+# Imagens e gráficos gerados pelas simulações
