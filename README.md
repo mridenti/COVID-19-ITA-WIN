@@ -6,8 +6,8 @@ Código fonte, configurado para copilação no Visual Studio 2015 e executável 
 # Download
 
 Baixe o repositório COVID-19-ITA-WIN na sua máquina. Para isso, basta clicar no
-ícone verde no canto superior da página "Clone or download" e selecionar download 
-Zip.
+ícone verde no canto superior da página do GitHub, "Clone or download", e selecionar "download 
+Zip".
 
 # Compilação
 
@@ -20,11 +20,11 @@ Dentro de um prompt de comando do Windows, de preferência o prompt de comando
 do visual studio 2015, acesse a pasta local onde o arquivo 
 COVID-19-ITA-WIN foi descompactado:
 ```
-CD C:\\<DIRETÓRIO LOCAL>\COVID-19-ITA-WIN
+CD C:\<DIRETÓRIO LOCAL>\COVID-19-ITA-WIN
 ```
 Em seguida, entre no diretório build:
 ```
-CD C:\\<DIRETÓRIO LOCAL>\COVID-19-ITA-WIN\build
+CD C:\<DIRETÓRIO LOCAL>\COVID-19-ITA-WIN\build
 ```
 Para gerar o projeto a ser compilado pelo Visual Studio 2015, rode o programa 
 premake5 no diretório. Para isso o programa premake5 precisa estar instalado no 
@@ -66,11 +66,11 @@ python 2.7
 CD scripts
 ```
 ```
-python plot_output_SEAHIR.py
+python plot_output_SEAHIR_BR.py
 ```
 Note que uma versão do Python 2.7 precisa estar instalado na máquina, 
 https://www.python.org/download/releases/2.7/, com suporte
-para as bibliotecas numpy e matplotlib, geralmente distribuídas na versão padrão. 
+para os pacotes numpy e matplotlib, geralmente distribuídas na versão padrão. 
 
 # Instrução de execução
 
@@ -79,7 +79,7 @@ Os cenários se encontram na pasta \input\cenarios. Na mesma, encontram-se as
 pastas cenarioBR, cenarioSP e cenarioSJC, correspondendo respectivamente aos 
 cenarios do Brasil, do Estado de São Paulo e do município de São José dos Campos.
 
-Cada pasta de cenário deve conter no mínimo os arquivos 
+Cada pasta de cenário deve conter no mínimo os arquivos: 
 ```
 demographic_data.csv 
 epidemiology_data.csv 
@@ -102,7 +102,7 @@ O arquivo epidemiology_data.csv contém os parâmetros epidemiológicos. Os arqu
  que são todos necessários para sua execução, por exemplo,   
  ```
  CD scripts
-python cenario_generator -i cenarioBR -d 0 24 75 200 -m 3 -I0 50 -R0 8.0 
+python cenario_generator -i cenarioBR -d 0 27 75 200 -m 3 -I0 50 -R0 8.0 
  ```
 onde as opções tem tem os seguintes significado
  ```
@@ -113,9 +113,18 @@ bloco de intervenção. Os tipos de intervenções precisam ser "hard coded",
 por enquanto, mas as matrizes especificando os casos definidos na seção 3.6 do 
 relatório estão todas implementadas: basta substituí-las no script.
 
+Na configuração padrão, temos o seguinte cenário de intervenção:
+````
+[DAY0] a [DAY1]: nenhuma intervenção
+[DAY1] a [DAY2]: Lock down com isolamento de idoso, redução global de 20% por epi
+[DAY2] a [DAY3]: Fechamento de escola, distanciamento social e isolamento de idoso, , redução global de 20% por epi
+[DAY3] a [DAY4]: Redução global de 20% por epi
+````
+
 O script cenario_generator produz uma mensagem indicando se a operação foi bem
 sucedida. Em caso de sucesso, os arquivos parameters.csv, beta_gama.csv e 
-initial.csv serão criadas na pasta do cenário. 
+initial.csv serão criadas na pasta do cenário. Esses arquivos são necessários 
+para a execução do código csv_to_input.exe.  
 
 ## Gerando um arquivo de input a partir de um cenário:
 
@@ -125,19 +134,19 @@ CD ..
 ```
 e executar
 ```
-bin/csv_to_input [nome do cenário]
+bin\csv_to_input [nome do cenário]
 ```
 
 e.g.
 ```
-bin/csv_to_input cenarioBR
+bin\csv_to_input cenarioBR
 ```
 
 ## Executando a simulação:
 No diretório principal, executar o seguinte comando:
 
 ```
-bin/spatial_covid0d_estrat input/input_data.txt output/result_data.csv MODEL_NUMBER
+bin\spatial_covid0d_estrat input\input_data.txt output\result_data.csv MODEL_NUMBER
 ```
 
 Sendos os modelos:
@@ -151,3 +160,42 @@ Sendos os modelos:
 
 
 ## Plotando resultados: 
+
+Os resultados do modelo SEAHIR podem ser plotados utilizando o script plot_output_SEAHIR_BR.py, 
+para os resultados do cenário cenarioBR. Para isso, entre novamente na pasta
+scripts
+```
+CD scripts
+```
+e execute, por exemplo,
+```
+python plot_output_SEAHIR_BR -d 0 27 75 200 -s 50
+```
+onde as opções tem os seguintes significado
+ ```
+ plot_output_SEAHIR_BR -d [DIA0] [DIA1] [DIA2] [DIA3] -s [Fator de correção] 
+ ```
+A opção -s fornece o fator de correção a multiplicar as notificações oficiais, 
+para corrigir o efeito das subnotificações.  
+
+Para plotar os resultados de São Paulo e São José dos Campos, 
+usar plot_output_SEAHIR_SP.py e plot_output_SEAHIR_SJC.py .
+
+Futuramente será construído um script geral plot_output.py para plotar qualquer 
+modelo dado um cenário/região qualquer.  
+
+# Quicktest
+
+A seguir apresentamos as instruções para a execução completa da simulação, 
+desde a construção do cenário:  
+
+````
+C:\[Diretório Atual]> CD C:\[Diretório local]\COVID-19-ITA-WIN
+C:\[Diretório local]\COVID-19-ITA-WIN> CD scripts
+C:\[Diretório local]\COVID-19-ITA-WIN\scripts> python cenario_generator -i cenarioBR -d 0 27 75 200 -m 3 -I0 50 -R0 8.0
+C:\[Diretório local]\COVID-19-ITA-WIN\scripts> CD ..
+C:\[Diretório local]\COVID-19-ITA-WIN> bin\csv_to_input.exe cenarioBR
+C:\[Diretório local]\COVID-19-ITA-WIN> bin\spatial_covid0d_estrat.exe input\generated-input.txt output\result_data.csv 3
+C:\[Diretório local]\COVID-19-ITA-WIN> CD scripts
+C:\[Diretório local]\COVID-19-ITA-WIN\scripts> python plot_output_SEAHIR_BR -d 0 27 75 200 -s 50
+````
