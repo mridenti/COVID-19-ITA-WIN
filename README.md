@@ -98,24 +98,43 @@ O arquivo epidemiology_data.csv contém os parâmetros epidemiológicos. Os arqu
  introduzir parâmetros demográficos ou epidemiológicos.   
  
  O script cenario_generator.py deve ser utilizado para gerar e especificar o 
- cenário. Por enquanto, o script precisa ser alterado à mão para gerar o cenário
- desejado.  
-  
- 
+ cenário. Esse script toma alguns parâmetros de entrada para poder gerar o cenário,
+ que são todos necessários para sua execução, por exemplo,   
+ ```
+ CD scripts
+python cenario_generator -i cenarioBR -d 0 24 75 200 -m 3 -I0 50 -R0 8.0 
+ ```
+onde as opções tem tem os seguintes significado
+ ```
+ cenario_generator -i [nome do folder do cenario] -d [DIA0] [DIA1] [DIA2] [DIA3] -m [MODELO#] -I0 [INFECTADOS INICIAIS] -R0 [NÚMERO DE REPRODUÇÃO] 
+ ```
+Note que os dias [DIA0], [DIA1], ... etc correspondem ao início de um determinado
+bloco de intervenção. Os tipos de intervenções precisam ser "hard coded", 
+por enquanto, mas as matrizes especificando os casos definidos na seção 3.6 do 
+relatório estão todas implementadas: basta substituí-las no script.
 
+O script cenario_generator produz uma mensagem indicando se a operação foi bem
+sucedida. Em caso de sucesso, os arquivos parameters.csv, beta_gama.csv e 
+initial.csv serão criadas na pasta do cenário. 
 
 ## Gerando um arquivo de input a partir de um cenário:
+
+Para gerar o arquivo de input, é necessário voltar para o diretório principal 
+```
+CD ..
+```
+e executar
 ```
 bin/csv_to_input [nome do cenário]
 ```
 
 e.g.
 ```
-bin/csv_to_input lockdown
+bin/csv_to_input cenarioBR
 ```
 
-
 ## Executando a simulação:
+No diretório principal, executar o seguinte comando:
 
 ```
 bin/spatial_covid0d_estrat input/input_data.txt output/result_data.csv MODEL_NUMBER
