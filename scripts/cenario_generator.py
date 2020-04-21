@@ -234,8 +234,9 @@ with open('parameters.csv', 'wb') as csvfile:
     spamwriter.writerow(np.concatenate((['GAMA_RQI'], gamma_RQI)))
     spamwriter.writerow(np.concatenate((['GAMA_RQA'], gamma_RQA)))
     spamwriter.writerow(np.concatenate((['GAMA_HQI'], gamma_HQI)))
-    spamwriter.writerow(np.concatenate((['GAMA_QI'], gamma_QI)))
-    spamwriter.writerow(np.concatenate((['GAMA_QA'], gamma_QA)))
+    #spamwriter.writerow(np.concatenate((['GAMA_QI'], gamma_QI)))
+    #spamwriter.writerow(np.concatenate((['GAMA_QA'], gamma_QA)))
+    spamwriter.writerow(np.concatenate((['TC'], TC)))
     spamwriter.writerow(np.concatenate((['TLC'], tlc)))
 
 # cria arquivos beta_gama.csv
@@ -351,39 +352,48 @@ C_all_old_lock = np.dot(A_home, C_home_post) + np.dot(W_lock, C_work_old) + np.d
 # Matrix sem intervenção desde o instante zero
 
 beta_gama_header = ['DAY', 'GAMA_F1', 'GAMA_F2', 'GAMA_F3', 'GAMA_F4', 'GAMA_F5', 'GAMA_F6', 'GAMA_F7', 'GAMA_F8',
-                    'GAMA_F9',
-                    'GAMA_F10', 'GAMA_F11', 'GAMA_F12', 'GAMA_F13', 'GAMA_F14', 'GAMA_F15', 'GAMA_F16',
+                    'GAMA_F9', 'GAMA_F10', 'GAMA_F11', 'GAMA_F12', 'GAMA_F13', 'GAMA_F14', 'GAMA_F15', 'GAMA_F16',
+                    'xI_F1', 'xI_F2', 'xI_F3', 'xI_F4', 'xI_F5', 'xI_F6', 'xI_F7',
+                    'xI_F8', 'xI_F9', 'xI_F10', 'xI_F11', 'xI_F12', 'xI_F13',
+                    'xI_F14', 'xI_F15', 'xI_F16',
+                    'xA_F1', 'xA_F2', 'xA_F3', 'xA_F4', 'xA_F5', 'xA_F6', 'xA_F7',
+                    'xA_F8', 'xA_F9', 'xA_F10', 'xA_F11', 'xA_F12', 'xA_F13',
+                    'xA_F14', 'xA_F15', 'xA_F16',
                     'BETA_MATRIX', 'BETA_MATRIX', 'BETA_MATRIX', 'BETA_MATRIX', 'BETA_MATRIX', 'BETA_MATRIX',
                     'BETA_MATRIX', 'BETA_MATRIX', 'BETA_MATRIX', 'BETA_MATRIX', 'BETA_MATRIX', 'BETA_MATRIX',
                     'BETA_MATRIX', 'BETA_MATRIX', 'BETA_MATRIX', 'BETA_MATRIX']
 space_16 = ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']
+
+space_48 = ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
+            '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
+            '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']
 
 with open('beta_gama.csv', 'wb') as csvfile:
     spamwriter = csv.writer(csvfile)
     spamwriter.writerow(beta_gama_header)
     for i in range(0, age_strata):
         if i == 0:
-            spamwriter.writerow(np.concatenate(([day_init], gamma, C_all_pre[i, :])))
+            spamwriter.writerow(np.concatenate(([day_init], gamma, xI, xA, C_all_pre[i, :])))
         else:
-            spamwriter.writerow(np.concatenate(([day_init], space_16, C_all_pre[i, :])))
-    spamwriter.writerow(np.concatenate(([''], space_16, space_16)))
+            spamwriter.writerow(np.concatenate(([day_init], space_48, C_all_pre[i, :])))
+    spamwriter.writerow(np.concatenate(([''], space_48, space_16)))
     for i in range(0, age_strata):
         if i == 0:
-            spamwriter.writerow(np.concatenate(([day_next_1], gamma, C_all_old_lock[i, :])))
+            spamwriter.writerow(np.concatenate(([day_next_1], gamma, xI, xA, C_all_old_lock[i, :])))
         else:
-            spamwriter.writerow(np.concatenate(([day_next_1], space_16, C_all_old_lock[i, :])))
-    spamwriter.writerow(np.concatenate(([''], space_16, space_16)))
+            spamwriter.writerow(np.concatenate(([day_next_1], space_48, C_all_old_lock[i, :])))
+    spamwriter.writerow(np.concatenate(([''], space_48, space_16)))
     for i in range(0, age_strata):
         if i == 0:
-            spamwriter.writerow(np.concatenate(([day_next_2], gamma, C_all_old_school_other[i, :])))
+            spamwriter.writerow(np.concatenate(([day_next_2], gamma, xI, xA, C_all_old_school_other[i, :])))
         else:
-            spamwriter.writerow(np.concatenate(([day_next_2], space_16, C_all_old_school_other[i, :])))
-    spamwriter.writerow(np.concatenate(([''], space_16, space_16)))
+            spamwriter.writerow(np.concatenate(([day_next_2], space_48, C_all_old_school_other[i, :])))
+    spamwriter.writerow(np.concatenate(([''], space_48, space_16)))
     for i in range(0, age_strata):
         if i == 0:
-            spamwriter.writerow(np.concatenate(([day_next_3], gamma, C_all_post[i, :] / epi_f)))
+            spamwriter.writerow(np.concatenate(([day_next_3], gamma, xI, xA, C_all_post[i, :] / epi_f)))
         else:
-            spamwriter.writerow(np.concatenate(([day_next_3], space_16, C_all_post[i, :] / epi_f)))
+            spamwriter.writerow(np.concatenate(([day_next_3], space_48, C_all_post[i, :] / epi_f)))
 
 print(u'Voltando para o diretório de script')
 os.chdir("..")

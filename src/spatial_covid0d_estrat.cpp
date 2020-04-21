@@ -83,8 +83,7 @@ int main(int argc, char** argv)
     read_simple_array(params.gama_RQI, buffer, input);
     read_simple_array(params.gama_RQA, buffer, input);
     read_simple_array(params.gama_HQI, buffer, input);
-    read_simple_array(params.gama_QI, buffer, input);
-    read_simple_array(params.gama_QA, buffer, input);
+	read_simple_array(params.Tc, buffer, input);
 	read_simple_array(params.Tlc, buffer, input);
 
     for (int i = 0; i < NEA; ++i)
@@ -108,11 +107,21 @@ int main(int argc, char** argv)
     while (read_non_comment_line(buffer, input))
     {
         sscanf_s(buffer, "%s %d", title, (unsigned)_countof(title),  &params.day); //day
-        //printf_s("%s: %d\n", title, params.day);
         read_array_per_day(params.gama, buffer, input, params.day);
-        read_matrix_per_day(params.beta, buffer, input, params.day);
+		read_array_per_day(params.xI, buffer, input, params.day);
+		read_array_per_day(params.xA, buffer, input, params.day);
+		read_matrix_per_day(params.beta, buffer, input, params.day);
     }
     fclose(input);
+
+	for (int k = 0; k < NEA; k++)
+	{
+		for (int day = 0; day < MAX_DAYS; day++)
+		{
+			params.gama_QI[day][k] = params.xI[day][k] * (params.gama_H[k] + params.gama_RI[k]) / (1 - params.xI[day][k]);
+			params.gama_QA[day][k] = params.xA[day][k] * params.gama_RA[k] / (1 - params.xA[day][k]);
+		}
+	}
 
     params.model = model;
     DerivFunc derivs = get_model(params.model);

@@ -133,7 +133,7 @@ int main(int argc, char** argv) {
 	fprintf_s(output, "\n");
 	fclose(csv);
 
-	// Open BETA & GAMA file
+	// Print gama, gama_QI, gama_QA and beta by day
 	FILE *csv_beta_gama;
 
     if (argc == 2)
@@ -165,6 +165,7 @@ int main(int argc, char** argv) {
         printf_s("\t (Neste caso usará o cenário default) \n");
     }
 
+	// Print gama, gama_QI, gama_QA and beta by day
     fgets(line, 4096, csv_beta_gama); // Ignorar header
 	int day = -1;
 
@@ -181,23 +182,43 @@ int main(int argc, char** argv) {
 					day = atoi(tok);
 					fprintf_s(output, "# ---------------------------------------------------------- \n");
 					fprintf_s(output, "DAY %s \n", tok);
-					fprintf_s(output, "GAMA \t");
 
+					// Print GAMA
+					fprintf_s(output, "GAMA \t\t");
 					tok = strtok_s(NULL, ",\n", &posn); // Step
 					for (int ii = 0; ii < NEA; ii++) {
-						fprintf_s(output, "%-12s ", tok);
+						fprintf_s(output, "%-18s ", tok);
 						tok = strtok_s(NULL, ",\n", &posn); // Step
 					}
 					fprintf_s(output, "\n");
-					fprintf_s(output, "BETA \t");
+
+					// Print xI
+					fprintf_s(output, "xI \t\t\t");
+					for (int ii = 0; ii < NEA; ii++) {
+						fprintf_s(output, "%-18s ", tok);
+						tok = strtok_s(NULL, ",\n", &posn); // Step
+					}
+					fprintf_s(output, "\n");
+
+					// Print xA
+					fprintf_s(output, "xA \t\t\t");
+					for (int ii = 0; ii < NEA; ii++) {
+						fprintf_s(output, "%-18s ", tok);
+						if (ii != (NEA - 1)) tok = strtok_s(NULL, ",\n", &posn); // Step
+					}
+					fprintf_s(output, "\n");
+
+					// Print BETA
+					fprintf_s(output, "BETA \t\t");
 				}
 				else if (tok[0] != 10) {
-					fprintf_s(output, "     	");
+					// Padding
+					fprintf(output, "     	    ");
 				}
 				first_tok = false;
 			}
 			else {
-				fprintf_s(output, "%-12s ", tok);
+				fprintf(output, "%-18s ", tok);
 			}	
 		}
 		first_tok = true;

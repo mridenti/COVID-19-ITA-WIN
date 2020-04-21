@@ -32,6 +32,10 @@ Model::Enum model;
 
 int day;
 // Taxa de Natalidade
+
+// ---- Parâmetros que fixos no tempo -----
+
+
 double Lambda[NEA];
 // Taxa de mortalidade equilibrio
 double mu_eq[NEA];
@@ -63,17 +67,25 @@ double gama_RQI[NEA];
 double gama_RQA[NEA];
 // Coeficiente de taxa de hospitalização do quarentenado sintomático (modelo SEAHIR-Qia)
 double gama_HQI[NEA];
-// Coeficiente de taxa de movimento do infectado sintomático para a quarentena (modelo SEAHIR-Qia)
-double gama_QI[NEA];
-// Coeficiente de taxa de movimento do infectado assintomático para a quarentena (modelo SEAHIR-Qia)
-double gama_QA[NEA];
+// Fração média de óbitos entre infectados
+double Tc[NEA];
 // Fração média de óbitos entre hospitalizados
 double Tlc[NEA];
+
+// ---- Parâmetros que variam no tempo -----
 
 // Taxa de contaminacao
 double beta[MAX_DAYS][NEA][NEA];
 // Taxa de recuperacao
 double gama[MAX_DAYS][NEA];
+// Coeficiente de taxa de movimento do infectado sintomático para a quarentena (modelo SEAHIR-Qia)
+double gama_QI[MAX_DAYS][NEA];
+// Coeficiente de taxa de movimento do infectado assintomático para a quarentena (modelo SEAHIR-Qia)
+double gama_QA[MAX_DAYS][NEA];
+// Probabilidade de testar um infectado sintomatico (modelo SEAHIR-Qia)
+double xI[MAX_DAYS][NEA];
+// Probabilidade de testar um infectado assintomatico (modelo SEAHIR-Qia)
+double xA[MAX_DAYS][NEA];
 
 };
 

@@ -109,10 +109,10 @@ void derivs_seahirq(double t, double y[][NA], double dydt[][NA], ScenarioParamet
       double alpha_beta_row_sum = sum_alpha_beta(k, y, p);
       dydt[k][Var::S] = p->Lambda[k]*y[k][Var::N] -  p->mu_eq[k] * y[k][Var::S] - alpha_beta_row_sum - beta_row_sum;
       dydt[k][Var::E] = beta_row_sum + alpha_beta_row_sum - (p->mu_eq[k] + p->a[k]) * y[k][Var::E];
-      dydt[k][Var::A] = p->a[k] * (1.0 - p->rho[k]) * y[k][Var::E] - (p->mu_eq[k] + p->gama_RA[k] + p->gama_QA[k]) * y[k][Var::A];
-      dydt[k][Var::I] = p->a[k] * p->rho[k] * y[k][Var::E] - (p->mu_eq[k] + p->gama_H[k] + p->gama_RI[k] + p->gama_QI[k]) * y[k][Var::I];
-      dydt[k][Var::Qi] = p->gama_QI[k] * y[k][Var::I] - (p->gama_HQI[k] + p->mu_eq[k] + p->gama_RQI[k]) * y[k][Var::Qi];
-      dydt[k][Var::Qa] = p->gama_QA[k] * y[k][Var::A] - (p->gama_RQA[k] + p->mu_eq[k]) * y[k][Var::Qa];
+	  dydt[k][Var::A] = p->a[k] * (1.0 - p->rho[k]) * y[k][Var::E] - (p->mu_eq[k] + p->gama_RA[k] + p->gama_QA[p->day][k]) * y[k][Var::A];
+	  dydt[k][Var::I] = p->a[k] * p->rho[k] * y[k][Var::E] - (p->mu_eq[k] + p->gama_H[k] + p->gama_RI[k] + p->gama_QI[p->day][k]) * y[k][Var::I];
+	  dydt[k][Var::Qi] = p->gama_QI[p->day][k] * y[k][Var::I] - (p->gama_HQI[k] + p->mu_eq[k] + p->gama_RQI[k]) * y[k][Var::Qi];
+	  dydt[k][Var::Qa] = p->gama_QA[p->day][k] * y[k][Var::A] - (p->gama_RQA[k] + p->mu_eq[k]) * y[k][Var::Qa];
       dydt[k][Var::H] = p->gama_H[k] * y[k][Var::I] + p->gama_HQI[k] * y[k][Var::Qi] - (p->gama_HR[k] + p->mu_eq[k] + p->mu_cov[k]) * y[k][Var::H];
       dydt[k][Var::R] = p->gama_RI[k] * y[k][Var::I] + p->gama_RA[k] * y[k][Var::A] + p->gama_RQA[k] * y[k][Var::Qa] + p->gama_HQI[k] * y[k][Var::Qi] + p->gama_HR[k] * y[k][Var::H] - p->mu_eq[k] * y[k][Var::R];
 	  dydt[k][Var::Ri] = p->gama_RI[k] * y[k][Var::I] + p->gama_HQI[k] * y[k][Var::Qi] + p->gama_HR[k] * y[k][Var::H];
