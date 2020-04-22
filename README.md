@@ -199,3 +199,14 @@ C:\[Diretório local]\COVID-19-ITA-WIN> bin\spatial_covid0d_estrat.exe input\gen
 C:\[Diretório local]\COVID-19-ITA-WIN> CD scripts
 C:\[Diretório local]\COVID-19-ITA-WIN\scripts> python plot_output_SEAHIR_BR -d 0 27 75 200 -s 50
 ````
+
+# Optimização
+
+No diuretório de scripts, encontram-se alguns scripts Python nomeados sim_annealing_XX.py.
+Esses scripts obtem o mínimo da função &chi;<sup>2</sup> para os parâmetros
+R<sub>0</sub> e g<sub>s</sub>
+
+&chi;<sup>2</sup> = &sum;<sub>i</sub> 
+[Ac(t<sub>i</sub>)/g<sub>s</sub> - NT(t<sub>i</sub>) ]<sup>2</sup>/NT(t<sub>i</sub>) +
+&sum;<sub>i</sub> 
+[C(t<sub>i</sub>) - NO(t<sub>i</sub>)]<sup>2</sup>/NO(t<sub>i</sub>) 
