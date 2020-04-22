@@ -25,7 +25,7 @@ parser.add_argument('-d', '--day', type=int, nargs=4, help='Days of measure begi
                     required=True)
 parser.add_argument('-m', '--model', type=int, help='(0) SIR, (1) SEIR, (2) SEAIR, (3) SEAHIR - default is SEAHIR ',
                     required=True)
-parser.add_argument('-I0', '--I0_value', type=int, help='Number of initial infected', required=True)
+parser.add_argument('-I0', '--I0_value', type=float, help='Number of initial infected', required=True)
 parser.add_argument('-R0', '--R0_value', type=float, help='Multiplication number', required=True)
 args = parser.parse_args()
 

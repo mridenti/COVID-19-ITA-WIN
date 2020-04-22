@@ -10,7 +10,7 @@ import os
 parser = argparse.ArgumentParser(description='This script plots the results for Brazil.')
 parser.add_argument('-d', '--day', type=int, nargs=4, help='Days of measure beginning - four values required',
                     required=True)
-parser.add_argument('-s', '--scale_factor', type=int, help='Scale factor accounting for under notification ',
+parser.add_argument('-s', '--scale_factor', type=float, help='Scale factor accounting for under notification ',
                     required=True)
 args = parser.parse_args()
 
@@ -18,7 +18,7 @@ args = parser.parse_args()
 print ("Days: %s" % args.day)
 print ("Scale factor accounting for under notification: %s" % args.scale_factor)
 
-s_0 = int(args.scale_factor)
+s_0 = float(args.scale_factor)
 
 # Limite entre cenários
 day_init = int(args.day[0])
@@ -35,10 +35,11 @@ output_file = 'result_data.csv'
 # Dados de infectados atuais no Brasil
 YData = np.array([1, 1, 1, 2, 2, 2, 2, 4, 4, 13, 13, 20, 25, 31, 38, 52, 151, 151, 162, 200, 321, 372, 621, 793, 1021,
                   1546, 1924, 2247,  2554, 2985, 3417, 3904, 4256, 4579, 5717, 6836, 8044, 9056, 10360, 11130, 12161,
-                  14034, 16170, 18092, 19638, 20727, 22192,	23430,	25262,	28320,	30425, 33682, 36658, 38654])
-CData = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 6, 11, 15, 25, 34, 46, 59, 77, 92,
+                  14034, 16170, 18092, 19638, 20727, 22192,	23430,	25262,	28320,	30425, 33682, 36658, 38654, 40743,
+                  43079])
+CData = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 6, 11, 15, 25, 34, 46, 59, 77, 92,
                   111, 136, 159, 201, 240, 324, 359, 445, 486, 564, 686, 819, 950, 1057, 1124, 1223, 1328, 1532, 1736,
-                  1924, 2141, 2354, 2462])
+                  1924, 2141, 2354, 2462, 2587, 2741])
 
 tData = np.linspace(0, YData.size - 1, YData.size)
 cData = np.linspace(0, CData.size - 1, CData.size)

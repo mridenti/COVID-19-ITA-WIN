@@ -10,7 +10,7 @@ import os
 parser = argparse.ArgumentParser(description=u'This script plots the results for São José dos Campos.')
 parser.add_argument('-d', '--day', type=int, nargs=4, help='Days of measure beginning - four values required ',
                     required=True)
-parser.add_argument('-s', '--scale_factor', type=int, help='Scale factor accounting for under notification ',
+parser.add_argument('-s', '--scale_factor', type=float, help='Scale factor accounting for under notification ',
                     required=True)
 args = parser.parse_args()
 
@@ -18,7 +18,7 @@ args = parser.parse_args()
 print ("Days: %s" % args.day)
 print ("Scale factor accounting for under notification: %s" % args.scale_factor)
 
-s_0 = int(args.scale_factor)
+s_0 = float(args.scale_factor)
 
 # Limite entre cenários
 day_init = int(args.day[0])
@@ -32,9 +32,10 @@ compartments = 11
 leitos = 280
 output_file = 'result_data.csv'
 
-# Dados de infectados atuais no Estado de São Paulo
-YData = np.array([1, 1,	2, 2, 4, 5, 9, 12, 14, 20, 24, 30,48, 61, 77, 81, 85, 85, 85, 85, 90, 113, 116, 135])
-CData = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 3, 3, 3])
+# Dados de infectados atuais em São José dos Campos
+YData = np.array([1, 1,	2, 2, 4, 5, 9, 12, 14, 20, 24, 30,48, 61, 77, 81, 85, 85, 85, 85, 90, 113, 116, 135, 138,
+                  136, 136, 138])
+CData = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 3, 3, 3, 3, 3, 3, 3])
 
 tData = np.linspace(0, YData.size - 1, YData.size)
 cData = np.linspace(0, CData.size - 1, CData.size)
