@@ -202,7 +202,7 @@ C:\[Diretório local]\COVID-19-ITA-WIN\scripts> python plot_output_SEAHIR_BR -d 
 
 # Optimização
 
-No diuretório de scripts, encontram-se alguns scripts Python nomeados sim_annealing_XX.py.
+No diretório de scripts, encontram-se alguns scripts Python nomeados sim_annealing_XX.py.
 Esses scripts obtem o mínimo da função &chi;<sup>2</sup> para os parâmetros
 R<sub>0</sub> e g<sub>s</sub>
 
@@ -210,3 +210,13 @@ R<sub>0</sub> e g<sub>s</sub>
 [Ac(t<sub>i</sub>)/g<sub>s</sub> - NT(t<sub>i</sub>) ]<sup>2</sup>/NT(t<sub>i</sub>) +
 &sum;<sub>i</sub> 
 [C(t<sub>i</sub>) - NO(t<sub>i</sub>)]<sup>2</sup>/NO(t<sub>i</sub>) 
+
+usando um algoritmo de "annealing", baseado no algoritmo Metropolis e métodos 
+estocásticos. 
+
+Esses scripts devem ser executados dentro da pasta "scripts", e automaticamente 
+encontrará o caminho para a executar os outros programas e scripts. É importante
+preservar a estrutura de pastas do projeto para que isso seja possível.  
+
+Para alterar os dias de intervenção e outros parâmetros no momento é necessário
+alterar o código à mão. 
