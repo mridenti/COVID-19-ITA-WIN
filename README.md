@@ -215,7 +215,7 @@ usando um algoritmo de "annealing", baseado no algoritmo Metropolis e métodos
 estocásticos. 
 
 Esses scripts devem ser executados dentro da pasta "scripts", e automaticamente 
-encontrará o caminho para a executar os outros programas e scripts. É importante
+encontrará o caminho para executar os outros programas e scripts. É importante
 preservar a estrutura de pastas do projeto para que isso seja possível.  
 
 Para alterar os dias de intervenção e outros parâmetros no momento é necessário
