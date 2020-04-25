@@ -16,6 +16,33 @@ def symmetrize(matrix_C, PP, age_n):
     return c_m
 
 
+#### Pick the chosen scenario matrix
+def pick_intervention(itv_ic, *arg):
+    if itv_ic == 0:
+        return arg[0]
+    elif itv_ic == 1:
+        return arg[1]
+    elif itv_ic == 2:
+        return arg[2]
+    elif itv_ic == 3:
+        return arg[3]
+    elif itv_ic == 4:
+        return arg[4]
+    elif itv_ic == 5:
+        return arg[5]
+    elif itv_ic == 6:
+        return arg[6]
+    elif itv_ic == 7:
+        return arg[7]
+    elif itv_ic == 8:
+        return arg[8]
+    elif itv_ic == 9:
+        return arg[9]
+    elif itv_ic == 10:
+        return arg[10]
+    else:
+        return arg[0]
+
 ##### Process command line options
 ##### Variable parameters, for error estimation within reasonable bounds
 parser = argparse.ArgumentParser(description='This script computes the scenario matrices and other inputs for '
@@ -27,6 +54,13 @@ parser.add_argument('-m', '--model', type=int, help='(0) SIR, (1) SEIR, (2) SEAI
                     required=True)
 parser.add_argument('-I0', '--I0_value', type=float, help='Number of initial infected', required=True)
 parser.add_argument('-R0', '--R0_value', type=float, help='Multiplication number', required=True)
+parser.add_argument('-Rp', '--R0_post', type=float, help='Post outbreak multiplication number', required=True)
+parser.add_argument('-epi', '--epi_value', type=float, help='Contagion decrease due to epi - 0.8 for 20% decrease',
+                    required=True)
+parser.add_argument('-itv', '--intervention', type=int, nargs=4, help='Four integer numbers, each representing an '
+                                                                      'intervention case. See README file for '
+                                                                      'intervention table.',
+                    required=True)
 args = parser.parse_args()
 
 ## show values ##
@@ -35,15 +69,20 @@ print ("Days: %s" % args.day)
 print ("Model: %s" % args.model)
 print ("I0: %s" % args.I0_value)
 print ("R0: %s" % args.R0_value)
+print ("Correction post: %s" % args.epi_value)
+print ("Intervention cases: %s" % args.intervention)
 
 I_0 = int(args.I0_value)
 R0 = float(args.R0_value)
+R0_post = float(args.R0_post)
 model = int(args.model)
 day_init = int(args.day[0])
 day_next_1 = int(args.day[1])
 day_next_2 = int(args.day[2])
 day_next_3 = int(args.day[3])
+itv_list = [int(args.intervention[0]), int(args.intervention[1]), int(args.intervention[2]), int(args.intervention[3])]
 input_folder = args.input_file
+epi_f = float(args.epi_value)  # protection decrease of transmission probability
 
 age_strata = 16
 t_days = 400
@@ -234,8 +273,8 @@ with open('parameters.csv', 'wb') as csvfile:
     spamwriter.writerow(np.concatenate((['GAMA_RQI'], gamma_RQI)))
     spamwriter.writerow(np.concatenate((['GAMA_RQA'], gamma_RQA)))
     spamwriter.writerow(np.concatenate((['GAMA_HQI'], gamma_HQI)))
-    #spamwriter.writerow(np.concatenate((['GAMA_QI'], gamma_QI)))
-    #spamwriter.writerow(np.concatenate((['GAMA_QA'], gamma_QA)))
+    # spamwriter.writerow(np.concatenate((['GAMA_QI'], gamma_QI)))
+    # spamwriter.writerow(np.concatenate((['GAMA_QA'], gamma_QA)))
     spamwriter.writerow(np.concatenate((['TC'], TC)))
     spamwriter.writerow(np.concatenate((['TLC'], tlc)))
 
@@ -271,24 +310,23 @@ if model == 2 or 3:
     beta_val = R0 * gamma[0] / (rho.max() + np.mean(alpha) * (1 - rho.max()))
 else:
     beta = R0 * gamma[0]
-C_all_pre = beta * C_sym * age_strata
+C_all_pre = beta * C_sym * age_strata  ## itv_id = 0
 C_home_pre = beta * C_sym_home * age_strata
 C_work_pre = beta * C_sym_work * age_strata
 C_school_pre = beta * C_sym_school * age_strata
 C_other_pre = beta * C_sym_other * age_strata
 
-R0_post = R0
 if model == 2 or model == 3:
     beta = R0_post * gamma[0] / (rho.max() + np.mean(alpha) * (1 - rho.max())) / eig_value
     beta_val = R0_post * gamma[0] / (rho.max() + np.mean(alpha) * (1 - rho.max()))
 else:
     beta = R0 * gamma[0]
-epi_f = 0.8  # protection decrease of transmission probability
+
 C_home_post = epi_f * beta * C_sym_home * age_strata
 C_work_post = epi_f * beta * C_sym_work * age_strata
 C_school_post = epi_f * beta * C_sym_school * age_strata
 C_other_post = epi_f * beta * C_sym_other * age_strata
-C_all_post = C_home_post + C_work_post + C_school_post + C_other_post
+C_all_post = C_home_post + C_work_post + C_school_post + C_other_post ## itv_id = 1
 
 # Build matrix for scenarios
 I_old = np.diag(np.ones(age_strata))
@@ -349,7 +387,19 @@ C_all_old_school_other_work = np.dot(A_home, C_home_post) + np.dot(W_work, C_wor
 # Lockdown com isolamento de idoso
 C_all_old_lock = np.dot(A_home, C_home_post) + np.dot(W_lock, C_work_old) + np.dot(B_lock, C_other_old)
 
-# Matrix sem intervenção desde o instante zero
+# Escolhe as matrizes de intervenção
+matrix_0 = pick_intervention(itv_list[0], C_all_pre, C_all_post, C_all_school, C_all_school_other,
+                             C_all_school_other_work, C_all_lock, C_all_old, C_all_old_school,
+                             C_all_old_school_other, C_all_old_school_other_work, C_all_old_lock)
+matrix_1 = pick_intervention(itv_list[1], C_all_pre, C_all_post, C_all_school, C_all_school_other,
+                             C_all_school_other_work, C_all_lock, C_all_old, C_all_old_school,
+                             C_all_old_school_other, C_all_old_school_other_work, C_all_old_lock)
+matrix_2 = pick_intervention(itv_list[2], C_all_pre, C_all_post, C_all_school, C_all_school_other,
+                             C_all_school_other_work, C_all_lock, C_all_old, C_all_old_school,
+                             C_all_old_school_other, C_all_old_school_other_work, C_all_old_lock)
+matrix_3 = pick_intervention(itv_list[3], C_all_pre, C_all_post, C_all_school, C_all_school_other,
+                             C_all_school_other_work, C_all_lock, C_all_old, C_all_old_school,
+                             C_all_old_school_other, C_all_old_school_other_work, C_all_old_lock)
 
 beta_gama_header = ['DAY', 'GAMA_F1', 'GAMA_F2', 'GAMA_F3', 'GAMA_F4', 'GAMA_F5', 'GAMA_F6', 'GAMA_F7', 'GAMA_F8',
                     'GAMA_F9', 'GAMA_F10', 'GAMA_F11', 'GAMA_F12', 'GAMA_F13', 'GAMA_F14', 'GAMA_F15', 'GAMA_F16',
@@ -373,27 +423,27 @@ with open('beta_gama.csv', 'wb') as csvfile:
     spamwriter.writerow(beta_gama_header)
     for i in range(0, age_strata):
         if i == 0:
-            spamwriter.writerow(np.concatenate(([day_init], gamma, xI, xA, C_all_pre[i, :])))
+            spamwriter.writerow(np.concatenate(([day_init], gamma, xI, xA, matrix_0[i, :])))
         else:
-            spamwriter.writerow(np.concatenate(([day_init], space_48, C_all_pre[i, :])))
+            spamwriter.writerow(np.concatenate(([day_init], space_48, matrix_0[i, :])))
     spamwriter.writerow(np.concatenate(([''], space_48, space_16)))
     for i in range(0, age_strata):
         if i == 0:
-            spamwriter.writerow(np.concatenate(([day_next_1], gamma, xI, xA, C_all_old_lock[i, :])))
+            spamwriter.writerow(np.concatenate(([day_next_1], gamma, xI, xA, matrix_1[i, :])))
         else:
-            spamwriter.writerow(np.concatenate(([day_next_1], space_48, C_all_old_lock[i, :])))
+            spamwriter.writerow(np.concatenate(([day_next_1], space_48, matrix_1[i, :])))
     spamwriter.writerow(np.concatenate(([''], space_48, space_16)))
     for i in range(0, age_strata):
         if i == 0:
-            spamwriter.writerow(np.concatenate(([day_next_2], gamma, xI, xA, C_all_old_school_other[i, :])))
+            spamwriter.writerow(np.concatenate(([day_next_2], gamma, xI, xA, matrix_2[i, :])))
         else:
-            spamwriter.writerow(np.concatenate(([day_next_2], space_48, C_all_old_school_other[i, :])))
+            spamwriter.writerow(np.concatenate(([day_next_2], space_48, matrix_2[i, :])))
     spamwriter.writerow(np.concatenate(([''], space_48, space_16)))
     for i in range(0, age_strata):
         if i == 0:
-            spamwriter.writerow(np.concatenate(([day_next_3], gamma, xI, xA, C_all_post[i, :] / epi_f)))
+            spamwriter.writerow(np.concatenate(([day_next_3], gamma, xI, xA, matrix_3[i, :])))
         else:
-            spamwriter.writerow(np.concatenate(([day_next_3], space_48, C_all_post[i, :] / epi_f)))
+            spamwriter.writerow(np.concatenate(([day_next_3], space_48, matrix_3[i, :])))
 
 print(u'Voltando para o diretório de script')
 os.chdir("..")

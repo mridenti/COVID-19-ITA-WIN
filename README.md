@@ -102,24 +102,39 @@ O arquivo epidemiology_data.csv contém os parâmetros epidemiológicos. Os arqu
  que são todos necessários para sua execução, por exemplo,   
  ```
  CD scripts
-python cenario_generator -i cenarioBR -d 0 27 75 200 -m 3 -I0 50 -R0 8.0 
+python cenario_generator -i cenarioBR -d 0 27 75 200 -m 3 -I0 50 -R0 8.0 -Rp 8.0
+-epi 0.8 -itv 0 10 9 1 
  ```
-onde as opções tem tem os seguintes significado
+onde as opções tem os seguintes significado
  ```
- cenario_generator -i [nome do folder do cenario] -d [DIA0] [DIA1] [DIA2] [DIA3] -m [MODELO#] -I0 [INFECTADOS INICIAIS] -R0 [NÚMERO DE REPRODUÇÃO] 
+ cenario_generator -i [nome do folder do cenario] -d [DIA0] [DIA1] [DIA2] [DIA3] -m [MODELO#] 
+-I0 [INFECTADOS INICIAIS] -R0 [NÚMERO DE REPRODUÇÃO] -Rp [NÚMERO DE REPRODUÇÃO PÓS SURTO]
+-epi [FATOR DE REDUÇÃO POR EPI E HIGIENE] -itv [itv_ID] [itv_ID] [itv_ID] [itv_ID]
  ```
 Note que os dias [DIA0], [DIA1], ... etc correspondem ao início de um determinado
-bloco de intervenção. Os tipos de intervenções precisam ser "hard coded", 
-por enquanto, mas as matrizes especificando os casos definidos na seção 3.6 do 
-relatório estão todas implementadas: basta substituí-las no script.
+bloco de intervenção. Os tipos de intervenções são passados pela opção -itv, de
+acordo com tabela abaixo 
 
-Na configuração padrão, temos o seguinte cenário de intervenção:
-````
-[DAY0] a [DAY1]: nenhuma intervenção
-[DAY1] a [DAY2]: Lock down com isolamento de idoso, redução global de 20% por epi
-[DAY2] a [DAY3]: Fechamento de escola, distanciamento social e isolamento de idoso, , redução global de 20% por epi
-[DAY3] a [DAY4]: Redução global de 20% por epi
-````
+| Intervenção                               | Número     |
+|:-----------------------------------------:|:----------:|
+| Nenhuma - Surto                           | 0          |
+| Nenhuma - pós Surt                        | 1          |
+| Fech. Escola                              | 2          |
+| Fech. Escola / Dist Soc.                  | 3          |
+| Fech. Escola / Dist Soc./Trabal.          | 4          |
+| Lock down sem idosos                      | 5          |
+| Isol Idos.                                | 6          |
+| Fech. Esc./ Isol. Idos.                   | 7          |
+| Fech. Esc./ Isol. Idos./Dist Soc.         | 8          |
+| Fech. Esc./ Isol. Idos./Dist Soc./Trabal. | 9          |
+| Lock down                                 | 10         |
+
+A opção -epi fornece um fator de 0 a 1 que representa uma redução global 
+na probabiidade de transmissão, seja por medidas de uso de máscaras 
+e de higiene, seja pela redução global de contatos, em todo caso reduzindo
+o valor do R0 do surto. 
+Para uma redução global de 20%, por exemplo, deve-se utilizar um fator de 0,8. 
+Para nenhum efeito de redução global, usar fator de 1,0.
 
 O script cenario_generator produz uma mensagem indicando se a operação foi bem
 sucedida. Em caso de sucesso, os arquivos parameters.csv, beta_gama.csv e 
@@ -204,7 +219,7 @@ C:\[Diretório local]\COVID-19-ITA-WIN\scripts> python plot_output_SEAHIR_BR -d 
 
 No diretório de scripts, encontram-se alguns scripts Python nomeados sim_annealing_XX.py.
 Esses scripts obtem o mínimo da função &chi;<sup>2</sup> para os parâmetros
-R<sub>0</sub> e g<sub>s</sub>
+R<sub>0</sub>, g<sub>s</sub> e g<sub>e</sub>  
 
 &chi;<sup>2</sup> = &sum;<sub>i</sub> 
 [Ac(t<sub>i</sub>)/g<sub>s</sub> - NT(t<sub>i</sub>) ]<sup>2</sup>/NT(t<sub>i</sub>) +
@@ -212,11 +227,14 @@ R<sub>0</sub> e g<sub>s</sub>
 [C(t<sub>i</sub>) - NO(t<sub>i</sub>)]<sup>2</sup>/NO(t<sub>i</sub>) 
 
 usando um algoritmo de "annealing", baseado no algoritmo Metropolis e métodos 
-estocásticos. 
+estocásticos. Os parâmetro g<sub>s</sub> é o índice de subnotificação e 
+g<sub>e</sub> é um fator de 0 a 1 que reduz o R0 na fase pós-surto. Os dados
+experimentais são, Ac(t<sub>i</sub>), o número de casos acumulados, e 
+No(t<sub>i</sub>), o número de notificações de óbito.    
 
-Esses scripts devem ser executados dentro da pasta "scripts", e automaticamente 
-encontrará o caminho para executar os outros programas e scripts. É importante
+Esses scripts devem ser executados dentro da pasta "scripts", para automaticamente 
+encontrar o caminho para executar os outros programas e scripts. É importante
 preservar a estrutura de pastas do projeto para que isso seja possível.  
 
-Para alterar os dias de intervenção e outros parâmetros no momento é necessário
-alterar o código à mão. 
+Para alterar os dias de intervenção e outros parâmetros, é necessário
+alterar o código do script.  
