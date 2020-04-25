@@ -109,7 +109,7 @@ onde as opções tem os seguintes significado
  ```
  cenario_generator -i [nome do folder do cenario] -d [DIA0] [DIA1] [DIA2] [DIA3] -m [MODELO#] 
 -I0 [INFECTADOS INICIAIS] -R0 [NÚMERO DE REPRODUÇÃO] -Rp [NÚMERO DE REPRODUÇÃO PÓS SURTO]
--epi [FATOR DE REDUÇÃO POR EPI E HIGIENE] -itv [itv_ID] [itv_ID] [itv_ID] [itv_ID]
+-epi [FATOR DE REDUÇÃO GLOBAL] -itv [itv_ID] [itv_ID] [itv_ID] [itv_ID]
  ```
 Note que os dias [DIA0], [DIA1], ... etc correspondem ao início de um determinado
 bloco de intervenção. Os tipos de intervenções são passados pela opção -itv, de
