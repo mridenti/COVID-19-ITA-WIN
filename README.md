@@ -207,12 +207,15 @@ desde a construção do cenário:
 ````
 C:\[Diretório Atual]> CD C:\[Diretório local]\COVID-19-ITA-WIN
 C:\[Diretório local]\COVID-19-ITA-WIN> CD scripts
-C:\[Diretório local]\COVID-19-ITA-WIN\scripts> python cenario_generator -i cenarioBR -d 0 27 75 200 -m 3 -I0 50 -R0 8.0
+C:\[Diretório local]\COVID-19-ITA-WIN\scripts> python cenario_generator -i
+    cenarioBR -d 0 27  75 200 -m 3 -I0 50 -R0 8.0 -Rp 8.0 -epi 0.8 -itv 0 10 9 1 
 C:\[Diretório local]\COVID-19-ITA-WIN\scripts> CD ..
 C:\[Diretório local]\COVID-19-ITA-WIN> bin\csv_to_input.exe cenarioBR
-C:\[Diretório local]\COVID-19-ITA-WIN> bin\spatial_covid0d_estrat.exe input\generated-input.txt output\result_data.csv 3
+C:\[Diretório local]\COVID-19-ITA-WIN> bin\spatial_covid0d_estrat.exe
+    input\generated-input.txt output\result_data.csv 3
 C:\[Diretório local]\COVID-19-ITA-WIN> CD scripts
-C:\[Diretório local]\COVID-19-ITA-WIN\scripts> python plot_output_SEAHIR_BR -d 0 27 75 200 -s 50
+C:\[Diretório local]\COVID-19-ITA-WIN\scripts> python plot_output_SEAHIR_BR -d 0 
+    27 75 200 -s 50
 ````
 
 # Optimização
