@@ -20,14 +20,12 @@ t_days = 400
 # Number of compartments in the output file
 compartments = 11
 
-# Dados de infectados atuais no Brasil
-YData = np.array([1, 1, 1, 2, 2, 2, 2, 4, 4, 13, 13, 20, 25, 31, 38, 52, 151, 151, 162, 200, 321, 372, 621, 793, 1021,
-                  1546, 1924, 2247, 2554, 2985, 3417, 3904, 4256, 4579, 5717, 6836, 8044, 9056, 10360, 11130, 12161,
-                  14034, 16170, 18092, 19638, 20727, 22192, 23430, 25262, 28320, 30425, 33682, 36658, 38654, 40743,
-                  43079, 45757, 50036, 52995])
-CData = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 6, 11, 15, 25, 34, 46, 59, 77, 92,
-                  111, 136, 159, 201, 240, 324, 359, 445, 486, 564, 686, 819, 950, 1057, 1124, 1223, 1328, 1532, 1736,
-                  1924, 2141, 2354, 2462, 2587, 2741, 2906, 3331, 3670])
+# Dados de infectados atuais em Fortaleza
+YData = np.array([8, 9, 17, 63, 76, 116, 151, 170, 196, 224, 268, 304, 338, 353, 371, 413, 526, 600, 681, 869, 929,
+                  1053, 1238, 1283, 1366, 1457, 1529, 1686, 1794, 1946, 2041, 2300, 2562, 2688, 2840, 3018, 3303,
+                  3791, 4063])
+CData = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 4, 5, 5, 6, 6, 17, 18, 26, 27, 30, 45, 45, 53, 58, 59, 78, 86, 93,
+                  95, 119, 141, 148, 164, 176, 189, 212, 228])
 
 tData = np.linspace(0, YData.size - 1, YData.size)
 tcData = np.linspace(0, CData.size - 1, CData.size)
@@ -75,11 +73,11 @@ def f(x):
     g_s = x[1]
     g_e = x[2]
     print(r_0, g_s, g_e)
-    subprocess.call(['python', 'cenario_generator.py', '-i', 'cenarioBR', '-d', '0', '27', '75', '200', '-m', '3',
-                     '-I0', str(g_s), '-R0', str(r_0), '-Rp', str(r_0), '-epi', str(g_e),
+    subprocess.call(['python', 'cenario_generator.py', '-i', 'cenarioFortaleza', '-d', '0', '7', '75', '200', '-m', '3',
+                     '-I0', str(8.0*g_s), '-R0', str(r_0), '-Rp', str(r_0), '-epi', str(g_e),
                      '-itv', '0', '10', '9', '1'], stdout=open(os.devnull, 'wb'))
     os.chdir("..")
-    subprocess.call(['bin/csv_to_input', 'cenarioBR'], stdout=open(os.devnull, 'wb'))
+    subprocess.call(['bin/csv_to_input', 'cenarioFortaleza'], stdout=open(os.devnull, 'wb'))
     subprocess.call(['bin/spatial_covid0d_estrat.exe', 'input/generated-input.txt', 'output/result_data.csv', '3'],
                     stdout=open(os.devnull, 'wb'))
     os.chdir("output")
@@ -96,18 +94,17 @@ def f(x):
     return f_chi2
 
 
-r_bound = [1.5, 11.0]
-g_bound = [35.0, 60.0]
-g_s_bound = [0.2, 1.0]
-ret = optimize.dual_annealing(f, [r_bound, g_bound, g_s_bound], callback=print_fun, maxiter=10, seed=1234)
-print("global minimum: x = [%.4f, %.4f, %.4f], f(x0) = %.4f" % (ret.x[0], ret.x[1], ret.x[2],  ret.fun))
+r_bound = [1.5, 20.0]
+g_bound = [1.0, 70.0]
+g_e_bound = [0.2, 1.0]
+ret = optimize.dual_annealing(f, [r_bound, g_bound, g_e_bound], callback=print_fun, maxiter=10, seed=1234)
+print("global minimum: x = [%.4f, %.4f, %.4f], f(x0) = %.4f" % (ret.x[0], ret.x[1], ret.x[2], ret.fun))
 
-subprocess.call(['python', 'cenario_generator.py', '-i', 'cenarioBR', '-d', '0', '27', '75', '200', '-m', '3',
-                 '-I0', str(ret.x[1]), '-R0', str(ret.x[0]), '-Rp', str(ret.x[0]), '-epi', str(ret.x[2]),
+subprocess.call(['python', 'cenario_generator.py', '-i', 'cenarioFortaleza', '-d', '0', '7', '75', '200', '-m', '3',
+                 '-I0', str(8.0*ret.x[1]), '-R0', str(ret.x[0]), '-Rp', str(ret.x[0]), '-epi', str(ret.x[2]),
                  '-itv', '0', '10', '9', '1'])
-
 os.chdir("..")
-subprocess.call(['bin/csv_to_input', 'cenarioBR'])
+subprocess.call(['bin/csv_to_input', 'cenarioFortaleza'])
 subprocess.call(['bin/spatial_covid0d_estrat.exe', 'input/generated-input.txt', 'output/result_data.csv', '3'])
 os.chdir("scripts")
-subprocess.call(['python', 'plot_output_SEAHIR_BR.py', '-d', '0', '27', '75', '200', '-s', str(ret.x[1])])
+subprocess.call(['python', 'plot_output_SEAHIR_Fortaleza.py', '-d', '0', '7', '75', '200', '-s', str(ret.x[1])])

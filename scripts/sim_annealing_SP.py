@@ -21,17 +21,16 @@ t_days = 400
 compartments = 11
 
 # Dados de infectados atuais no Estado de São Paulo
-YData = np.array([1, 1, 1, 2, 2, 2, 2, 2, 3, 6, 10, 13, 16, 16, 19, 30, 46, 65, 152, 164, 240, 286, 396, 396, 631, 745,
-                  810, 862, 1052, 1223, 1406, 1451, 1517, 2339, 2981, 3506, 4048, 4466, 4620, 4866, 5682, 6708, 7480,
-                  8216, 8419, 8755, 8895, 9371, 11043, 11568, 13894, 14267, 14580, 15385])
+YData = np.array([1, 2, 2, 2, 2, 2, 3, 6, 10, 13, 16, 16, 19, 30, 46, 65, 152, 164, 240, 286, 396, 396, 631, 745,
+                   810, 862, 1052, 1223, 1406,	1451, 1517, 2339, 2981, 3506, 4048,	4466, 4620,	4866, 5682,	6708, 7480,
+                   8216, 8419,	8755, 8895,	9371, 11043, 11568, 13894, 14267, 14580, 15385, 16740, 17826])
 
-CData = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 5, 9, 15, 22, 30, 40, 48, 58, 68, 84,
+CData = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 5, 9, 15, 22, 30, 40, 48, 58, 68, 84,
                   98, 113, 136, 164, 188, 219, 260, 275, 304, 371, 428, 496, 540, 560, 588, 608, 695, 778, 853, 991,
-                  1015, 1037, 1093])
+                  1015, 1037, 1093, 1345, 1512])
 
 tData = np.linspace(0, YData.size - 1, YData.size)
 tcData = np.linspace(0, CData.size - 1, CData.size)
-
 
 class MyBounds(object):
      def __init__(self, xmax, xmin):
@@ -72,9 +71,11 @@ def read_output(out_file):
 def f(x):
     r_0 = x[0]
     g_s = x[1]
-    print(r_0, g_s)
+    g_e = x[2]
+    print(r_0, g_s, g_e)
     subprocess.call(['python', 'cenario_generator.py', '-i', 'cenarioSP', '-d', '0', '25', '75', '200', '-m', '3',
-                     '-I0', str(g_s), '-R0', str(r_0)], stdout=open(os.devnull, 'wb'))
+                     '-I0', str(g_s), '-R0', str(r_0), '-Rp', str(r_0), '-epi', str(g_e),
+                     '-itv', '0', '10', '9', '1'], stdout=open(os.devnull, 'wb'))
     os.chdir("..")
     subprocess.call(['bin/csv_to_input', 'cenarioSP'], stdout=open(os.devnull, 'wb'))
     subprocess.call(['bin/spatial_covid0d_estrat.exe', 'input/generated-input.txt', 'output/result_data.csv', '3'],
@@ -95,13 +96,13 @@ def f(x):
 
 r_bound = [1.5, 11.0]
 g_bound = [35.0, 55.0]
-x0 = [8.0, 50.0]
-print(f(x0))
-ret = optimize.dual_annealing(f, [r_bound, g_bound], callback=print_fun, maxiter=10, seed=1234)
-print("global minimum: x = [%.4f, %.4f], f(x0) = %.4f" % (ret.x[0], ret.x[1], ret.fun))
+g_e_bound = [0.3, 1.0]
+ret = optimize.dual_annealing(f, [r_bound, g_bound, g_e_bound], callback=print_fun, maxiter=10, seed=1234)
+print("global minimum: x = [%.4f, %.4f, %.4f], f(x0) = %.4f" % (ret.x[0], ret.x[1], ret.x[2], ret.fun))
 
 subprocess.call(['python', 'cenario_generator.py', '-i', 'cenarioSP', '-d', '0', '25', '75', '200', '-m', '3',
-                 '-I0', str(ret.x[1]), '-R0', str(ret.x[0])])
+                 '-I0', str(ret.x[1]), '-R0', str(ret.x[0]), '-Rp', str(ret.x[0]), '-epi', str(ret.x[2]),
+                 '-itv', '0', '10', '9', '1'])
 os.chdir("..")
 subprocess.call(['bin/csv_to_input', 'cenarioSP'])
 subprocess.call(['bin/spatial_covid0d_estrat.exe', 'input/generated-input.txt', 'output/result_data.csv', '3'])

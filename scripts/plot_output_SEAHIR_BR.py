@@ -36,10 +36,10 @@ output_file = 'result_data.csv'
 YData = np.array([1, 1, 1, 2, 2, 2, 2, 4, 4, 13, 13, 20, 25, 31, 38, 52, 151, 151, 162, 200, 321, 372, 621, 793, 1021,
                   1546, 1924, 2247,  2554, 2985, 3417, 3904, 4256, 4579, 5717, 6836, 8044, 9056, 10360, 11130, 12161,
                   14034, 16170, 18092, 19638, 20727, 22192,	23430,	25262,	28320,	30425, 33682, 36658, 38654, 40743,
-                  43079])
+                  43079, 45757, 50036, 52995])
 CData = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 6, 11, 15, 25, 34, 46, 59, 77, 92,
                   111, 136, 159, 201, 240, 324, 359, 445, 486, 564, 686, 819, 950, 1057, 1124, 1223, 1328, 1532, 1736,
-                  1924, 2141, 2354, 2462, 2587, 2741])
+                  1924, 2141, 2354, 2462, 2587, 2741, 2906, 3331, 3670])
 
 tData = np.linspace(0, YData.size - 1, YData.size)
 cData = np.linspace(0, CData.size - 1, CData.size)
@@ -141,6 +141,8 @@ plt.plot(t_array, Ac, '-', label='Ac')
 plt.plot(t_array, N, '-', label='N')
 plt.plot(t_array, E, '-', label='E')
 plt.plot(t_array, A, '-', label='A')
+plt.axvspan(day_next_1, day_next_2, alpha=0.1, color='blue')
+plt.axvspan(day_next_2, day_next_3, alpha=0.1, color='red')
 plt.xlim([0, 0.7*t_days])
 plt.xlabel(u'dias')
 plt.ylabel(u'indivíduos')

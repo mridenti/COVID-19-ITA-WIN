@@ -20,29 +20,28 @@ t_days = 400
 # Number of compartments in the output file
 compartments = 11
 
-# Dados de infectados atuais no Brasil
-YData = np.array([1, 1, 1, 2, 2, 2, 2, 4, 4, 13, 13, 20, 25, 31, 38, 52, 151, 151, 162, 200, 321, 372, 621, 793, 1021,
-                  1546, 1924, 2247, 2554, 2985, 3417, 3904, 4256, 4579, 5717, 6836, 8044, 9056, 10360, 11130, 12161,
-                  14034, 16170, 18092, 19638, 20727, 22192, 23430, 25262, 28320, 30425, 33682, 36658, 38654, 40743,
-                  43079, 45757, 50036, 52995])
-CData = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 6, 11, 15, 25, 34, 46, 59, 77, 92,
-                  111, 136, 159, 201, 240, 324, 359, 445, 486, 564, 686, 819, 950, 1057, 1124, 1223, 1328, 1532, 1736,
-                  1924, 2141, 2354, 2462, 2587, 2741, 2906, 3331, 3670])
+# Dados de infectados atuais no município de São Paulo
+YData = np.array([1, 1, 2, 2, 2, 2, 2, 3, 6, 12, 15, 15, 18, 29, 44, 62, 145, 156, 214, 259, 306, 722, 899, 1044,
+                  1233, 1885, 2418,  2815, 3202, 3496, 3612, 3754, 4258, 4947, 5477, 5982, 6131, 6352, 6418, 6705,
+                  7764, 7908, 8744, 9428, 9668, 9815, 10342, 10691, 11225, 11800])
+
+CData = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 5, 9, 44, 53, 62, 103, 121, 144, 164,
+                  186, 212, 220, 244, 296, 339, 384, 409, 422, 445, 456, 512, 558, 603, 643, 686, 700, 715, 753, 778,
+                  912, 1010])
 
 tData = np.linspace(0, YData.size - 1, YData.size)
 tcData = np.linspace(0, CData.size - 1, CData.size)
 
 
 class MyBounds(object):
-    def __init__(self, xmax, xmin):
-        self.xmax = np.array(xmax)
-        self.xmin = np.array(xmin)
-
-    def __call__(self, **kwargs):
-        x = kwargs["x_new"]
-        tmax = bool(np.all(x <= self.xmax))
-        tmin = bool(np.all(x >= self.xmin))
-        return tmax and tmin
+     def __init__(self, xmax, xmin):
+         self.xmax = np.array(xmax)
+         self.xmin = np.array(xmin)
+     def __call__(self, **kwargs):
+         x = kwargs["x_new"]
+         tmax = bool(np.all(x <= self.xmax))
+         tmin = bool(np.all(x >= self.xmin))
+         return tmax and tmin
 
 
 def print_fun(x, f, accepted):
@@ -75,11 +74,11 @@ def f(x):
     g_s = x[1]
     g_e = x[2]
     print(r_0, g_s, g_e)
-    subprocess.call(['python', 'cenario_generator.py', '-i', 'cenarioBR', '-d', '0', '27', '75', '200', '-m', '3',
+    subprocess.call(['python', 'cenario_generator.py', '-i', 'cenarioSP_CAPITAL', '-d', '0', '26', '75', '200', '-m', '3',
                      '-I0', str(g_s), '-R0', str(r_0), '-Rp', str(r_0), '-epi', str(g_e),
                      '-itv', '0', '10', '9', '1'], stdout=open(os.devnull, 'wb'))
     os.chdir("..")
-    subprocess.call(['bin/csv_to_input', 'cenarioBR'], stdout=open(os.devnull, 'wb'))
+    subprocess.call(['bin/csv_to_input', 'cenarioSP_CAPITAL'], stdout=open(os.devnull, 'wb'))
     subprocess.call(['bin/spatial_covid0d_estrat.exe', 'input/generated-input.txt', 'output/result_data.csv', '3'],
                     stdout=open(os.devnull, 'wb'))
     os.chdir("output")
@@ -90,24 +89,23 @@ def f(x):
     i_c = (CData > 0).astype(bool)
     i_cf = np.zeros(len(f_c), dtype=bool)
     i_cf[0:len(CData)] = i_c
-    f_chi2 = np.sum(np.divide(np.multiply(f_ac[0:i_ac] / g_s - YData, f_ac[0:i_ac] / g_s - YData), YData)) + \
+    f_chi2 = np.sum(np.divide(np.multiply(f_ac[0:i_ac]/g_s - YData, f_ac[0:i_ac]/g_s - YData), YData)) + \
              np.sum(np.divide(np.multiply(f_c[i_cf] - CData[i_c], f_c[i_cf] - CData[i_c]), CData[i_c]))
 
     return f_chi2
 
 
 r_bound = [1.5, 11.0]
-g_bound = [35.0, 60.0]
-g_s_bound = [0.2, 1.0]
-ret = optimize.dual_annealing(f, [r_bound, g_bound, g_s_bound], callback=print_fun, maxiter=10, seed=1234)
-print("global minimum: x = [%.4f, %.4f, %.4f], f(x0) = %.4f" % (ret.x[0], ret.x[1], ret.x[2],  ret.fun))
+g_bound = [35.0, 55.0]
+g_e_bound = [0.3, 1.0]
+ret = optimize.dual_annealing(f, [r_bound, g_bound, g_e_bound], callback=print_fun, maxiter=10, seed=1234)
+print("global minimum: x = [%.4f, %.4f, %.4f], f(x0) = %.4f" % (ret.x[0], ret.x[1], ret.x[2], ret.fun))
 
-subprocess.call(['python', 'cenario_generator.py', '-i', 'cenarioBR', '-d', '0', '27', '75', '200', '-m', '3',
+subprocess.call(['python', 'cenario_generator.py', '-i', 'cenarioSP_CAPITAL', '-d', '0', '26', '75', '200', '-m', '3',
                  '-I0', str(ret.x[1]), '-R0', str(ret.x[0]), '-Rp', str(ret.x[0]), '-epi', str(ret.x[2]),
                  '-itv', '0', '10', '9', '1'])
-
 os.chdir("..")
-subprocess.call(['bin/csv_to_input', 'cenarioBR'])
+subprocess.call(['bin/csv_to_input', 'cenarioSP_CAPITAL'])
 subprocess.call(['bin/spatial_covid0d_estrat.exe', 'input/generated-input.txt', 'output/result_data.csv', '3'])
 os.chdir("scripts")
-subprocess.call(['python', 'plot_output_SEAHIR_BR.py', '-d', '0', '27', '75', '200', '-s', str(ret.x[1])])
+subprocess.call(['python', 'plot_output_SEAHIR_SP_CAPITAL.py', '-d', '0', '26', '75', '200', '-s', str(ret.x[1])])

@@ -29,13 +29,15 @@ day_next_3 = int(args.day[3])
 t_days = 400
 age_strata = 16
 compartments = 11
-leitos = 280
+leitos = 709
 output_file = 'result_data.csv'
 
-# Dados de infectados atuais em São José dos Campos
-YData = np.array([1, 1,	2, 2, 4, 5, 9, 12, 14, 20, 24, 30,48, 61, 77, 81, 85, 85, 85, 85, 90, 113, 116, 135, 138,
-                  136, 136, 138, 139, 141, 158])
-CData = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 5, 5])
+# Dados de infectados atuais em Manaus
+YData = np.array([8, 9, 17, 63, 76, 116, 151, 170, 196, 224, 268, 304, 338, 353, 371, 413, 526, 600, 681, 869, 929,
+                  1053, 1238, 1283, 1366, 1457, 1529, 1686, 1794,	1946, 2041,	2300, 2562, 2688, 2840, 3018, 3303,
+                  3791])
+CData = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 4, 5, 5, 6, 6, 17, 18, 26, 27, 30, 45, 45, 53, 58, 59, 78, 86, 93,
+                  95, 119, 141, 148, 164, 176, 189,	212])
 
 tData = np.linspace(0, YData.size - 1, YData.size)
 cData = np.linspace(0, CData.size - 1, CData.size)
@@ -176,21 +178,21 @@ if np.max(L) > leitos:
                          r'$t(max(L))=%.f$ dias' % (t_max_L,),
                          r'$t(colapso)=%.f$ dias' % (t_colap,),
                          r'Obitos estimados $=%.2e$' % (max_C,),
-                         'dia zero: 18/03'])
+                         'dia zero: 16/03'])
 else:
     textstr = '\n'.join([r'$Max(H)=%.2e$' % (max_H,), r'$Max(L)=%.2e$' % (max_L,), r'$Max(I)=%.2e$' % (max_I,),
                          r'$t(max(I))=%.f$ dias' % (t_max_I,),
                          r'$t(max(L))=%.f$ dias' % (t_max_L,),
                          r'$t(colapso)=$inf ',
                          r'Obitos estimados $=%.2e$' % (max_C,),
-                         'dia zero: 18/03'])
+                         'dia zero: 16/03'])
 
 props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
 
 # place a text box in upper left in axes coords
 plt.text(0.5, 0.2, textstr, transform=plt.gca().transAxes, fontsize='small', verticalalignment='center', bbox=props)
 
-plt.suptitle(u'Curva total das populações em compartimentos, SJC - modelo SEAHIR')
+plt.suptitle(u'Curva total das populações em compartimentos, FOR - modelo SEAHIR')
 
 plt.figure(2)
 plt.subplot(121)
@@ -220,7 +222,7 @@ plt.xlim([0, 0.7*t_days])
 plt.ylim([1, 1.1*N.max()])
 plt.legend(loc='lower right', shadow=True, fontsize='small')
 
-plt.suptitle(u'Infectados e recuperados por faixa etária, SJC - modelo SEAHIR')
+plt.suptitle(u'Infectados e recuperados por faixa etária, FOR - modelo SEAHIR')
 
 plt.figure(3)
 plt.subplot(121)
@@ -256,6 +258,6 @@ plt.xlim([0, 0.7*t_days])
 plt.ylim([1, 1.1*I.max()])
 plt.legend(loc='lower right', shadow=True, fontsize='small')
 
-plt.suptitle(u'Estimativa de hospitalizados, leitos e óbitos por faixa etária, SJC - modelo SEAHIR')
+plt.suptitle(u'Estimativa de hospitalizados, leitos e óbitos por faixa etária, FOR - modelo SEAHIR')
 
 plt.show()

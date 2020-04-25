@@ -7,7 +7,7 @@ import os
 
 ##### Process command line options
 ##### Variable parameters, for error estimation within reasonable bounds
-parser = argparse.ArgumentParser(description=u'This script plots the results for São José dos Campos.')
+parser = argparse.ArgumentParser(description=u'This script plots the results for Manaus.')
 parser.add_argument('-d', '--day', type=int, nargs=4, help='Days of measure beginning - four values required ',
                     required=True)
 parser.add_argument('-s', '--scale_factor', type=float, help='Scale factor accounting for under notification ',
@@ -29,13 +29,16 @@ day_next_3 = int(args.day[3])
 t_days = 400
 age_strata = 16
 compartments = 11
-leitos = 280
+leitos = 463
 output_file = 'result_data.csv'
 
-# Dados de infectados atuais em São José dos Campos
-YData = np.array([1, 1,	2, 2, 4, 5, 9, 12, 14, 20, 24, 30,48, 61, 77, 81, 85, 85, 85, 85, 90, 113, 116, 135, 138,
-                  136, 136, 138, 139, 141, 158])
-CData = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 5, 5])
+# Dados de infectados atuais em Manaus
+YData = np.array([2, 2, 3, 7, 11, 25, 31, 45, 52, 63, 75, 105, 131, 140, 159, 179, 205, 232, 283, 379, 473, 560, 712,
+                  800, 863, 932, 1053, 1106, 1295, 1350, 1459, 1531, 1593, 1664, 1772, 1809, 1958, 2286, 2481])
+
+CData = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 5, 9, 11, 15, 19, 25, 33, 42, 45, 51, 60, 81, 92,
+                  107, 127, 134, 155, 156, 163, 172, 193, 207])
+
 
 tData = np.linspace(0, YData.size - 1, YData.size)
 cData = np.linspace(0, CData.size - 1, CData.size)
@@ -138,8 +141,8 @@ plt.plot(t_array, Ac, '-', label='Ac')
 plt.plot(t_array, N, '-', label='N')
 plt.plot(t_array, E, '-', label='E')
 plt.plot(t_array, A, '-', label='A')
-plt.axvspan(day_next_1, day_next_2, alpha=0.1, color='blue')
-plt.axvspan(day_next_2, day_next_3, alpha=0.1, color='red')
+plt.axvspan(day_next_1, day_next_2, alpha=0.1, color='red')
+plt.axvspan(day_next_2, day_next_3, alpha=0.1, color='blue')
 #plt.axvspan(day_next_1, day_next_2, alpha=0.1, color='black')
 plt.xlim([0, 0.7*t_days])
 plt.xlabel(u'dias')
@@ -160,8 +163,8 @@ plt.semilogy(cData, CData, 'or', label=u'Óbitos')
 plt.xlim([0, 0.7*t_days])
 plt.ylim([1, 1.1*N.max()])
 plt.xlabel('tempo (dias)')
-plt.axvspan(day_next_1, day_next_2, alpha=0.1, color='blue')
-plt.axvspan(day_next_2, day_next_3, alpha=0.1, color='red')
+plt.axvspan(day_next_1, day_next_2, alpha=0.1, color='red')
+plt.axvspan(day_next_2, day_next_3, alpha=0.1, color='blue')
 #plt.axvspan(day_next_1, day_next_2, alpha=0.1, color='black')
 max_H = np.max(H)
 max_L = np.max(L)
@@ -176,29 +179,29 @@ if np.max(L) > leitos:
                          r'$t(max(L))=%.f$ dias' % (t_max_L,),
                          r'$t(colapso)=%.f$ dias' % (t_colap,),
                          r'Obitos estimados $=%.2e$' % (max_C,),
-                         'dia zero: 18/03'])
+                         'dia zero: 13/03'])
 else:
     textstr = '\n'.join([r'$Max(H)=%.2e$' % (max_H,), r'$Max(L)=%.2e$' % (max_L,), r'$Max(I)=%.2e$' % (max_I,),
                          r'$t(max(I))=%.f$ dias' % (t_max_I,),
                          r'$t(max(L))=%.f$ dias' % (t_max_L,),
                          r'$t(colapso)=$inf ',
                          r'Obitos estimados $=%.2e$' % (max_C,),
-                         'dia zero: 18/03'])
+                         'dia zero: 13/03'])
 
 props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
 
 # place a text box in upper left in axes coords
 plt.text(0.5, 0.2, textstr, transform=plt.gca().transAxes, fontsize='small', verticalalignment='center', bbox=props)
 
-plt.suptitle(u'Curva total das populações em compartimentos, SJC - modelo SEAHIR')
+plt.suptitle(u'Curva total das populações em compartimentos, Manaus - modelo SEAHIR')
 
 plt.figure(2)
 plt.subplot(121)
 plt.plot(t_array, I1, '-b', label='I: 0 a 20')
 plt.plot(t_array, I2, '-g', label='I: 20 a 55')
 plt.plot(t_array, I3, '-r', label='I: 55 ou mais')
-plt.axvspan(day_next_1, day_next_2, alpha=0.1, color='blue')
-plt.axvspan(day_next_2, day_next_3, alpha=0.1, color='red')
+plt.axvspan(day_next_1, day_next_2, alpha=0.1, color='red')
+plt.axvspan(day_next_2, day_next_3, alpha=0.1, color='blue')
 #plt.axvspan(day_next_1, day_next_2, alpha=0.1, color='black')
 plt.xlim([0, 0.7*t_days])
 plt.xlabel(u'dias')
@@ -212,15 +215,15 @@ plt.semilogy(t_array, I3, '-r', label='I: 55 ou mais')
 plt.semilogy(t_array, R1, '--b', label='R: 0 a 20')
 plt.semilogy(t_array, R2, '--g', label='R: 20 a 55')
 plt.semilogy(t_array, R3, '--r', label='R: 55 ou mais')
-plt.axvspan(day_next_1, day_next_2, alpha=0.1, color='blue')
-plt.axvspan(day_next_2, day_next_3, alpha=0.1, color='red')
+plt.axvspan(day_next_1, day_next_2, alpha=0.1, color='red')
+plt.axvspan(day_next_2, day_next_3, alpha=0.1, color='blue')
 #plt.axvspan(day_next_1, day_next_2, alpha=0.1, color='black')
 plt.xlabel('tempo (dias)')
 plt.xlim([0, 0.7*t_days])
 plt.ylim([1, 1.1*N.max()])
 plt.legend(loc='lower right', shadow=True, fontsize='small')
 
-plt.suptitle(u'Infectados e recuperados por faixa etária, SJC - modelo SEAHIR')
+plt.suptitle(u'Infectados e recuperados por faixa etária, Manaus - modelo SEAHIR')
 
 plt.figure(3)
 plt.subplot(121)
@@ -230,8 +233,8 @@ plt.plot(t_array, H3, '-r', label='H: 55 ou mais')
 plt.plot(t_array, L1, '--b', label='L: 0 a 20')
 plt.plot(t_array, L2, '--g', label='L: 20 a 55')
 plt.plot(t_array, L3, '--r', label='L: 55 ou mais')
-plt.axvspan(day_next_1, day_next_2, alpha=0.1, color='blue')
-plt.axvspan(day_next_2, day_next_3, alpha=0.1, color='red')
+plt.axvspan(day_next_1, day_next_2, alpha=0.1, color='red')
+plt.axvspan(day_next_2, day_next_3, alpha=0.1, color='blue')
 #plt.axvspan(day_next_1, day_next_2, alpha=0.1, color='black')
 plt.xlim([0, 0.7*t_days])
 plt.xlabel(u'dias')
@@ -248,14 +251,14 @@ plt.semilogy(t_array, L3, '--r', label='L: 55 ou mais')
 plt.semilogy(t_array, C1, '-.b', label='C: 0 a 20')
 plt.semilogy(t_array, C2, '-.g', label='C: 20 a 55')
 plt.semilogy(t_array, C3, '-.r', label='C: 55 ou mais')
-plt.axvspan(day_next_1, day_next_2, alpha=0.1, color='blue')
-plt.axvspan(day_next_2, day_next_3, alpha=0.1, color='red')
+plt.axvspan(day_next_1, day_next_2, alpha=0.1, color='red')
+plt.axvspan(day_next_2, day_next_3, alpha=0.1, color='blue')
 #plt.axvspan(day_next_1, day_next_2, alpha=0.1, color='black')
 plt.xlabel('tempo (dias)')
 plt.xlim([0, 0.7*t_days])
 plt.ylim([1, 1.1*I.max()])
 plt.legend(loc='lower right', shadow=True, fontsize='small')
 
-plt.suptitle(u'Estimativa de hospitalizados, leitos e óbitos por faixa etária, SJC - modelo SEAHIR')
+plt.suptitle(u'Estimativa de hospitalizados, leitos e óbitos por faixa etária, Manaus - modelo SEAHIR')
 
 plt.show()

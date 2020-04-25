@@ -22,8 +22,8 @@ compartments = 11
 
 # Dados de infectados atuais em São José dos Campos
 YData = np.array([1, 1,	2, 2, 4, 5, 9, 12, 14, 20, 24, 30,48, 61, 77, 81, 85, 85, 85, 85, 90, 113, 116, 135, 138,
-                  136, 136, 138])
-CData = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 3, 3, 3, 3, 3, 3, 3])
+                  136, 136, 138, 139, 141, 158])
+CData = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 5, 5])
 
 tData = np.linspace(0, YData.size - 1, YData.size)
 tcData = np.linspace(0, CData.size - 1, CData.size)
@@ -68,9 +68,11 @@ def read_output(out_file):
 def f(x):
     r_0 = x[0]
     g_s = x[1]
-    print(r_0, g_s)
+    g_e = x[2]
+    print(r_0, g_s, g_e)
     subprocess.call(['python', 'cenario_generator.py', '-i', 'cenarioSJC', '-d', '0', '10', '40', '200', '-m', '3',
-                     '-I0', str(g_s), '-R0', str(r_0)], stdout=open(os.devnull, 'wb'))
+                     '-I0', str(g_s), '-R0', str(r_0), '-Rp', str(r_0), '-epi', str(g_e),
+                     '-itv', '0', '10', '9', '1'], stdout=open(os.devnull, 'wb'))
     os.chdir("..")
     subprocess.call(['bin/csv_to_input', 'cenarioSJC'], stdout=open(os.devnull, 'wb'))
     subprocess.call(['bin/spatial_covid0d_estrat.exe', 'input/generated-input.txt', 'output/result_data.csv', '3'],
@@ -89,15 +91,15 @@ def f(x):
     return f_chi2
 
 
-r_bound = [1.5, 9.0]
-g_bound = [1.0, 55.0]
-x0 = [8.0, 50.0]
-print(f(x0))
-ret = optimize.dual_annealing(f, [r_bound, g_bound], callback=print_fun, maxiter=10, seed=1234)
-print("global minimum: x = [%.4f, %.4f], f(x0) = %.4f" % (ret.x[0], ret.x[1], ret.fun))
+r_bound = [1.5, 12.0]
+g_bound = [20.0, 55.0]
+g_e_bound = [0.2, 1.0]
+ret = optimize.dual_annealing(f, [r_bound, g_bound, g_e_bound], callback=print_fun, maxiter=10, seed=1234)
+print("global minimum: x = [%.4f, %.4f, %.4f], f(x0) = %.4f" % (ret.x[0], ret.x[1], ret.x[2], ret.fun))
 
 subprocess.call(['python', 'cenario_generator.py', '-i', 'cenarioSJC', '-d', '0', '10', '40', '200', '-m', '3',
-                 '-I0', str(ret.x[1]), '-R0', str(ret.x[0])])
+                 '-I0', str(ret.x[1]), '-R0', str(ret.x[0]), '-Rp', str(ret.x[0]), '-epi', str(ret.x[2]),
+                 '-itv', '0', '10', '9', '1'])
 os.chdir("..")
 subprocess.call(['bin/csv_to_input', 'cenarioSJC'])
 subprocess.call(['bin/spatial_covid0d_estrat.exe', 'input/generated-input.txt', 'output/result_data.csv', '3'])
