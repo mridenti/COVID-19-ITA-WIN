@@ -142,9 +142,11 @@ O script cenario_generator admite algumas opções não obrigatórias. São elas
 ````
 para calcular e exibir no terminal os Rt's equivalentes em cada fase de intervenção; e
 ````
-
+-f [fator corretivo do índice de fatalidade]
 ````
-
+O fator corretivo do índice de fatalidade é um fator multiplicativo escalar 
+positivo aplicado sobre os índices de letalidade da COVID-19. Essa opção
+ é utilizada na estimativa da incerteza do índice de subnotificação. 
 
 O script cenario_generator produz uma mensagem indicando se a operação foi bem
 sucedida. Em caso de sucesso, os arquivos parameters.csv, beta_gama.csv e 
