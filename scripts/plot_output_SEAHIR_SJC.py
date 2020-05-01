@@ -30,12 +30,14 @@ t_days = 400
 age_strata = 16
 compartments = 11
 leitos = 280
-output_file = 'result_data.csv'
+output_file = 'result_data_SJC.csv'
 
 # Dados de infectados atuais em São José dos Campos
-YData = np.array([1, 1,	2, 2, 4, 5, 9, 12, 14, 20, 24, 30,48, 61, 77, 81, 85, 85, 85, 85, 90, 113, 116, 135, 138,
-                  136, 136, 138, 139, 141, 158])
-CData = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 3, 3, 3, 3, 3, 3, 3, 5, 5])
+YData = np.array([1, 1, 1, 1, 1, 1, 1, 2, 2, 4, 4, 4, 5, 9, 12, 14, 20, 24, 30, 48, 61, 77, 81, 85, 85, 85, 85, 90, 113,
+                  116, 135, 136, 136, 138, 138, 139, 141, 158, 174, 174, 185, 194, 202])
+CData = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 3, 3, 3, 3, 3, 3, 3,
+                  3, 5, 5, 5, 5, 5, 10, 10])
+
 
 tData = np.linspace(0, YData.size - 1, YData.size)
 cData = np.linspace(0, CData.size - 1, CData.size)
@@ -188,7 +190,7 @@ else:
 props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
 
 # place a text box in upper left in axes coords
-plt.text(0.5, 0.2, textstr, transform=plt.gca().transAxes, fontsize='small', verticalalignment='center', bbox=props)
+plt.text(0.6, 0.15, textstr, transform=plt.gca().transAxes, fontsize='small', verticalalignment='center', bbox=props)
 
 plt.suptitle(u'Curva total das populações em compartimentos, SJC - modelo SEAHIR')
 
@@ -203,7 +205,7 @@ plt.axvspan(day_next_2, day_next_3, alpha=0.1, color='red')
 plt.xlim([0, 0.7*t_days])
 plt.xlabel(u'dias')
 plt.ylabel(u'indivíduos')
-plt.legend(loc='center right', shadow=True, fontsize='small')
+plt.legend(loc='center left', shadow=True, fontsize='small')
 
 plt.subplot(122)
 plt.semilogy(t_array, I1, '-b',  label='I: 0 a 20')
@@ -218,7 +220,7 @@ plt.axvspan(day_next_2, day_next_3, alpha=0.1, color='red')
 plt.xlabel('tempo (dias)')
 plt.xlim([0, 0.7*t_days])
 plt.ylim([1, 1.1*N.max()])
-plt.legend(loc='lower right', shadow=True, fontsize='small')
+plt.legend(loc='upper right', shadow=True, fontsize='small')
 
 plt.suptitle(u'Infectados e recuperados por faixa etária, SJC - modelo SEAHIR')
 
@@ -236,7 +238,7 @@ plt.axvspan(day_next_2, day_next_3, alpha=0.1, color='red')
 plt.xlim([0, 0.7*t_days])
 plt.xlabel(u'dias')
 plt.ylabel(u'indivíduos')
-plt.legend(loc='center right', shadow=True, fontsize='small')
+plt.legend(loc='center left', shadow=True, fontsize='small')
 
 plt.subplot(122)
 plt.semilogy(t_array, H1, '-b', label='H: 0 a 20')
@@ -254,7 +256,7 @@ plt.axvspan(day_next_2, day_next_3, alpha=0.1, color='red')
 plt.xlabel('tempo (dias)')
 plt.xlim([0, 0.7*t_days])
 plt.ylim([1, 1.1*I.max()])
-plt.legend(loc='lower right', shadow=True, fontsize='small')
+plt.legend(loc='upper right', shadow=True, fontsize='small')
 
 plt.suptitle(u'Estimativa de hospitalizados, leitos e óbitos por faixa etária, SJC - modelo SEAHIR')
 

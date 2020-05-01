@@ -10,13 +10,13 @@ from scipy import stats
 # Objective function is the chi2 of death and corrected infection notification
 
 # Output file - this should be fixed
-output_file = 'result_data_SP_CAPITAL.csv'
+output_file = 'result_data_CUR.csv'
 
 # Output uncertainty file  - this should be fixed
 output_unc_file = 'uncertainty_data.csv'
 
 # Cenario folder
-cenario_folder = 'cenarioSP_CAPITAL'
+cenario_folder = 'cenarioCuritiba'
 
 # Number of age groups
 age_strata = 16
@@ -27,29 +27,27 @@ t_days = 400
 # Number of compartments in the output file
 compartments = 11
 
-# Dados de infectados atuais no município de São Paulo
-YData = np.array([1, 1, 2, 2, 2, 2, 2, 3, 6, 6, 12, 15, 15, 18,	29,	44,	44,	62,	62,	145, 156, 214, 259, 306, 306,
-                  306, 306, 306, 722, 899, 1044, 1044, 1044, 1233, 1885, 2418, 2815, 3202, 3496, 3612, 3754, 4258, 4947,
-                  5477, 5982, 6131, 6352, 6418, 6705, 7764, 7908, 8744, 9428, 9668, 9815, 10342, 10691, 11225,
-                  11800, 13098, 13513, 13989, 15397, 16638])
-
-CData = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 5, 9, 9, 9, 9, 9, 44, 53, 62, 62,
-                  62, 103, 121, 144, 164, 186, 212, 220, 244, 296, 339, 384, 409, 422, 445, 456, 512, 558, 603, 643,
-                  686, 700, 715, 753, 778, 912, 1010, 1099, 1114, 1172, 1321, 1439])
+# Dados de infectados atuais em Curitiba
+YData = np.array([5, 5, 5, 5, 5, 7, 8, 17, 27, 31, 31, 34, 40, 60, 66, 71, 73, 74, 77, 87, 97, 99, 114, 153, 172, 175,
+                  194, 205, 237, 251, 279, 299, 302, 302, 306, 320, 335, 346, 360, 369, 373, 380, 389, 397, 401, 404,
+                  414, 426, 434])
+CData = np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 5, 5, 5, 6, 7, 6,
+                 8, 8, 8, 9, 9, 9, 11, 14, 14, 14, 14, 16, 16, 17, 17])
 
 tData = np.linspace(0, YData.size - 1, YData.size)
 tcData = np.linspace(0, CData.size - 1, CData.size)
 
 
 class MyBounds(object):
-     def __init__(self, xmax, xmin):
-         self.xmax = np.array(xmax)
-         self.xmin = np.array(xmin)
-     def __call__(self, **kwargs):
-         x = kwargs["x_new"]
-         tmax = bool(np.all(x <= self.xmax))
-         tmin = bool(np.all(x >= self.xmin))
-         return tmax and tmin
+    def __init__(self, xmax, xmin):
+        self.xmax = np.array(xmax)
+        self.xmin = np.array(xmin)
+
+    def __call__(self, **kwargs):
+        x = kwargs["x_new"]
+        tmax = bool(np.all(x <= self.xmax))
+        tmin = bool(np.all(x >= self.xmin))
+        return tmax and tmin
 
 
 def print_fun(x, f, accepted):
@@ -82,11 +80,11 @@ def f(x):
     g_s = x[1]
     g_e = x[2]
     print(r_0, g_s, g_e)
-    subprocess.call(['python', 'cenario_generator.py', '-i', cenario_folder, '-d', '0', '26', '75', '200', '-m', '3',
-                     '-I0', str(g_s), '-R0', str(r_0), '-Rp', str(r_0), '-epi', str(g_e),
+    subprocess.call(['python', 'cenario_generator.py', '-i', 'cenarioCuritiba', '-d', '0', '13', '75', '200', '-m', '3',
+                     '-I0', str(5.0*g_s), '-R0', str(r_0), '-Rp', str(r_0), '-epi', str(g_e),
                      '-itv', '0', '10', '9', '1'], stdout=open(os.devnull, 'wb'))
     os.chdir("..")
-    subprocess.call(['bin/csv_to_input', cenario_folder], stdout=open(os.devnull, 'wb'))
+    subprocess.call(['bin/csv_to_input', 'cenarioCuritiba'], stdout=open(os.devnull, 'wb'))
     subprocess.call(['bin/spatial_covid0d_estrat.exe', 'input/generated-input.txt', '/'.join(['output', output_file]),
                      '3'], stdout=open(os.devnull, 'wb'))
     os.chdir("output")
@@ -97,7 +95,7 @@ def f(x):
     i_c = (CData > 0).astype(bool)
     i_cf = np.zeros(len(f_c), dtype=bool)
     i_cf[0:len(CData)] = i_c
-    f_chi2 = np.sum(np.divide(np.multiply(f_ac[0:i_ac]/g_s - YData, f_ac[0:i_ac]/g_s - YData), YData)) + \
+    f_chi2 = np.sum(np.divide(np.multiply(f_ac[0:i_ac] / g_s - YData, f_ac[0:i_ac] / g_s - YData), YData)) + \
              np.sum(np.divide(np.multiply(f_c[i_cf] - CData[i_c], f_c[i_cf] - CData[i_c]), CData[i_c]))
 
     return f_chi2
@@ -108,8 +106,8 @@ def f_s(x, params):
     g_s = x[0]
     g_e = params[1]
     fat_fac = params[2]
-    subprocess.call(['python', 'cenario_generator.py', '-i', cenario_folder, '-d', '0', '26', '75', '200', '-m', '3',
-                     '-I0', str(g_s), '-R0', str(r_0), '-Rp', str(r_0), '-epi', str(g_e),
+    subprocess.call(['python', 'cenario_generator.py', '-i', cenario_folder, '-d', '0', '13', '75', '200', '-m', '3',
+                     '-I0', str(5.0*g_s), '-R0', str(r_0), '-Rp', str(r_0), '-epi', str(g_e),
                      '-itv', '0', '10', '9', '1', '-f', str(fat_fac)], stdout=open(os.devnull, 'wb'))
     os.chdir("..")
     subprocess.call(['bin/csv_to_input', cenario_folder], stdout=open(os.devnull, 'wb'))
@@ -189,9 +187,9 @@ def pchi2_limit(chi2_0, ngl, par):
     return r0_plus, r0_minus, g_e_plus, g_e_minus
 
 
-r_bound = [1.5, 11.0]
-g_bound = [35.0, 55.0]
-g_e_bound = [0.3, 1.0]
+r_bound = [3.0, 20.0]
+g_bound = [1.0, 70.0]
+g_e_bound = [0.2, 0.7]
 ret = optimize.dual_annealing(f, [r_bound, g_bound, g_e_bound], callback=print_fun, maxiter=10, seed=1234)
 
 # Uncertainty estimate:
@@ -213,19 +211,17 @@ ret_minus = optimize.dual_annealing(f_s, [g_unc_bound], [[ret.x[0], ret.x[2], mi
 ret_plus = optimize.dual_annealing(f_s, [g_unc_bound], [[ret.x[0], ret.x[2], plus_fac]],
                                    callback=print_fun, maxiter=10, seed=1234)
 
-
-subprocess.call(['python', 'cenario_generator.py', '-i', cenario_folder, '-d', '0', '26', '75', '200', '-m', '3',
-                 '-I0', str(ret.x[1]), '-R0', str(ret.x[0]), '-Rp', str(ret.x[0]), '-epi', str(ret.x[2]),
-                 '-itv', '0', '10', '9', '1', '-s'])
-
 print("global minimum: x = [%.4f, %.4f, %.4f], f(x0) = %.4f" % (ret.x[0], ret.x[1], ret.x[2], ret.fun))
 print ("Under notification index uncertainty: [%.4f, %.4f]" % (ret_minus.x, ret_plus.x))
 print ("R0 uncertainty: [%.4f, %.4f]" % (r0_Plus, r0_Minus))
 print ("Attenuation factor uncertainty: [%.4f, %.4f]" % (g_e_Plus, g_e_Minus))
 
+subprocess.call(['python', 'cenario_generator.py', '-i', cenario_folder, '-d', '0', '13', '75', '200', '-m', '3',
+                 '-I0', str(5.0*ret.x[1]), '-R0', str(ret.x[0]), '-Rp', str(ret.x[0]), '-epi', str(ret.x[2]),
+                 '-itv', '0', '10', '9', '1', '-s'])
 os.chdir("..")
-subprocess.call(['bin/csv_to_input', cenario_folder], stdout=open(os.devnull, 'wb'))
+subprocess.call(['bin/csv_to_input', cenario_folder])
 subprocess.call(['bin/spatial_covid0d_estrat.exe', 'input/generated-input.txt', '/'.join(['output', output_file]),
-                 '3'], stdout=open(os.devnull, 'wb'))
+                 '3'])
 os.chdir("scripts")
-subprocess.call(['python', 'plot_output_SEAHIR_SP_CAPITAL.py', '-d', '0', '26', '75', '200', '-s', str(ret.x[1])])
+subprocess.call(['python', 'plot_output_SEAHIR_Curitiba.py', '-d', '0', '13', '75', '200', '-s', str(ret.x[1])])

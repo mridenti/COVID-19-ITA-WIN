@@ -43,6 +43,7 @@ def pick_intervention(itv_ic, *arg):
     else:
         return arg[0]
 
+
 ##### Process command line options
 ##### Variable parameters, for error estimation within reasonable bounds
 parser = argparse.ArgumentParser(description='This script computes the scenario matrices and other inputs for '
@@ -61,6 +62,12 @@ parser.add_argument('-itv', '--intervention', type=int, nargs=4, help='Four inte
                                                                       'intervention case. See README file for '
                                                                       'intervention table.',
                     required=True)
+parser.add_argument('-f', '--fatality', type=float, help='Factor that multiplies uniformly the fatality '
+                                                         'rate. Use to estimate uncertainty. ',
+                    required=False)
+parser.add_argument('-s', action='store_true', help='If set, this argument print the equivalent Rt of each scenario',
+                    required=False)
+
 args = parser.parse_args()
 
 ## show values ##
@@ -71,6 +78,11 @@ print ("I0: %s" % args.I0_value)
 print ("R0: %s" % args.R0_value)
 print ("Correction post: %s" % args.epi_value)
 print ("Intervention cases: %s" % args.intervention)
+
+if args.fatality is None:
+    f_fac = 1.0
+else:
+    f_fac = float(args.fatality)
 
 I_0 = int(args.I0_value)
 R0 = float(args.R0_value)
@@ -232,9 +244,9 @@ gamma_QI = np.divide(np.multiply(xI, gamma_H + gamma_RI), (1 - xI))
 gamma_QA = np.divide(np.multiply(xA, gamma_RA), (1 - xA))
 tlc = np.divide(TC, phi)
 if model == 3:
-    mu_cov = np.divide(np.multiply(gamma, tlc), 1 - tlc)
+    mu_cov = np.divide(np.multiply(gamma, f_fac * tlc), 1 - f_fac * tlc)
 else:
-    mu_cov = np.divide(np.multiply(gamma, TC), 1 - TC)
+    mu_cov = np.divide(np.multiply(gamma, f_fac * TC), 1 - f_fac * TC)
 
 # cria arquivo initial.csv
 
@@ -326,7 +338,7 @@ C_home_post = epi_f * beta * C_sym_home * age_strata
 C_work_post = epi_f * beta * C_sym_work * age_strata
 C_school_post = epi_f * beta * C_sym_school * age_strata
 C_other_post = epi_f * beta * C_sym_other * age_strata
-C_all_post = C_home_post + C_work_post + C_school_post + C_other_post ## itv_id = 1
+C_all_post = C_home_post + C_work_post + C_school_post + C_other_post  ## itv_id = 1
 
 # Build matrix for scenarios
 I_old = np.diag(np.ones(age_strata))
@@ -450,3 +462,15 @@ os.chdir("..")
 os.chdir("..")
 os.chdir("..")
 os.chdir("scripts")
+
+if args.s is True:
+    w, v = eigs(matrix_1)
+    R1 = (np.real(w.max()) / age_strata) * (rho.max() + np.mean(alpha) * (1 - rho.max())) / gamma[0]
+    w, v = eigs(matrix_2)
+    R2 = (np.real(w.max()) / age_strata) * (rho.max() + np.mean(alpha) * (1 - rho.max())) / gamma[0]
+    w, v = eigs(matrix_3)
+    R3 = (np.real(w.max()) / age_strata) * (rho.max() + np.mean(alpha) * (1 - rho.max())) / gamma[0]
+    print('R0 value is: ', R0)
+    print('R1 value is: ', R1)
+    print('R2 value is: ', R2)
+    print('R3 value is: ', R3)
