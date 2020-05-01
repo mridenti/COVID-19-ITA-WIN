@@ -136,6 +136,16 @@ o valor do R0 do surto.
 Para uma redução global de 20%, por exemplo, deve-se utilizar um fator de 0,8. 
 Para nenhum efeito de redução global, usar fator de 1,0.
 
+O script cenario_generator admite algumas opções não obrigatórias. São elas:
+````
+-s 
+````
+para calcular e exibir no terminal os Rt's equivalentes em cada fase de intervenção; e
+````
+
+````
+
+
 O script cenario_generator produz uma mensagem indicando se a operação foi bem
 sucedida. Em caso de sucesso, os arquivos parameters.csv, beta_gama.csv e 
 initial.csv serão criadas na pasta do cenário. Esses arquivos são necessários 
@@ -231,9 +241,11 @@ R<sub>0</sub>, g<sub>s</sub> e g<sub>e</sub>
 
 usando um algoritmo de "annealing", baseado no algoritmo Metropolis e métodos 
 estocásticos. Os parâmetro g<sub>s</sub> é o índice de subnotificação e 
-g<sub>e</sub> é um fator de 0 a 1 que reduz o R0 na fase pós-surto. Os dados
+g<sub>e</sub> é um fator de 0 a 1 que reduz o R0 na fase pós-surto (redução da probabilidade de 
+transmissão). Os dados
 experimentais são, Ac(t<sub>i</sub>), o número de casos acumulados, e 
-No(t<sub>i</sub>), o número de notificações de óbito.    
+No(t<sub>i</sub>), o número de notificações de óbito. O script também estima
+a incerteza dos parâmetros, calculada para um intervalo de confiança de 95%. 
 
 Esses scripts devem ser executados dentro da pasta "scripts", para automaticamente 
 encontrar o caminho para executar os outros programas e scripts. É importante
