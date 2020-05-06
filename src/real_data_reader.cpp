@@ -53,8 +53,7 @@ DataReal reader(const char* csv_file, const char* country, char separator)
         result.data[i] = 0.0;
     }
     result.size = 0;
-	FILE* csv;
-	fopen_s(&csv, csv_file, "r");
+    FILE* csv = fopen(csv_file, "r");
 
     char line[4096];
     char tmp[4096];
@@ -100,7 +99,7 @@ DataReal reader(const char* csv_file, const char* country, char separator)
 
 bool read_non_comment_line(char* buffer, FILE* input) {
   while(fgets(buffer, BUFFER_SIZE, input)) {
-    if (buffer[0] != '#' && buffer[0] != '\n')
+    if (*buffer != '#' && *buffer != '\n')
       return true;
   }
   return false;
@@ -113,15 +112,15 @@ bool read_simple_array(double array[NEA], char* buffer, FILE* input) {
   int chars_old;
   double val;
   char title[128];
-  sscanf_s(buffer, "%s%n", title, (unsigned)_countof(title), &chars);
-  //printf("title: %s\n", title);
+  sscanf(buffer, "%s%n", title, &chars);
+  // printf("title: %s\n", title);
   for(int i=0; i < NEA; ++i) {
-    sscanf_s(buffer + chars, "%lf%n", &val, &chars_old);
+    sscanf(buffer + chars, "%lf%n", &val, &chars_old);
     chars += chars_old;
     array[i] = val;
-    //printf("  %lf", val);
+    // printf("  %lf", val);
   }
-  //printf("\n");
+  // printf("\n");
   return true;
 }
 
@@ -132,15 +131,15 @@ bool read_simple_array(int array[NEA], char* buffer, FILE* input) {
   int chars_old;
   int val;
   char title[128];
-  sscanf_s(buffer, "%s%n", title, (unsigned)_countof(title), &chars);
-  //printf("title: %s\n", title);
+  sscanf(buffer, "%s%n", title, &chars);
+  // printf("title: %s\n", title);
   for(int i=0; i < NEA; ++i) {
-    sscanf_s(buffer + chars, "%d%n", &val, &chars_old);
+    sscanf(buffer + chars, "%d%n", &val, &chars_old);
     chars += chars_old;
     array[i] = val;
-    //printf("  %d", val);
+    // printf("  %d", val);
   }
-  //printf("\n");
+  // printf("\n");
   return true;
 }
 
@@ -151,19 +150,19 @@ bool read_array_per_day(double array[MAX_DAYS][NEA], char* buffer, FILE* input, 
   int chars_old;
   double val;
   char title[128];
-  sscanf_s(buffer, "%s%n", title, (unsigned)_countof(title), &chars);
-  //printf_s("title: %s\n", title);
+  sscanf(buffer, "%s%n", title, &chars);
+  // printf("title: %s\n", title);
   for(int i=0; i < NEA; ++i) {
-    sscanf_s(buffer + chars, "%lf%n", &val, &chars_old);
+    sscanf(buffer + chars, "%lf%n", &val, &chars_old);
     chars += chars_old;
     for (int k = day; k < MAX_DAYS; ++k)
       {
         int idx = day == 0 ? 0 : k - 1;
         array[k][i] = val  >= 0 ? val  : array[idx][i];
       }
-    //printf_s("  %lf", val);
+    // printf("  %lf", val);
   }
-  //printf_s("\n");
+  // printf("\n");
   return true;
 }
 
@@ -174,23 +173,23 @@ bool read_matrix_per_day(double matrix[MAX_DAYS][NEA][NEA], char* buffer, FILE* 
   int chars_old;
   double val;
   char title[128];
-  sscanf_s(buffer, "%s%n", title, (unsigned)_countof(title), &chars);
-  //printf_s("title: %s\n", title);
+  sscanf(buffer, "%s%n", title, &chars);
+  // printf("title: %s\n", title);
   for(int j = 0; j < NEA; ++j) {
     if (j>0) {
       read_non_comment_line(buffer, input);
       chars = 0;
     }
     for(int i = 0; i < NEA; ++i) {
-      sscanf_s(buffer + chars, "%lf%n", &val, &chars_old);
-      //printf_s("  %lf", val);
+      sscanf(buffer + chars, "%lf%n", &val, &chars_old);
+      // printf("  %lf", val);
       chars += chars_old;
       for (int k = day; k < MAX_DAYS; ++k) {
         int idx = day == 0 ? 0 : k - 1;
         matrix[k][j][i] = val  >= 0 ? val  : matrix[idx][j][i];
       }
     }
-    //printf_s("\n");
+    // printf("\n");
   }
   return true;
 }

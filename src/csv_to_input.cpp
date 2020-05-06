@@ -6,6 +6,8 @@
 #include <math.h>
 #include <stdbool.h>
 
+#include "compatibility.h"
+
 #ifndef NEA
 #define NEA 16
 #endif
@@ -16,13 +18,14 @@ int main(int argc, char** argv) {
     FILE *csv;
     FILE *output;
     char filename[512];
-	char *input_path = "input\\";
+	char *input_path = "input/";
 	errno_t err;
 
     if (argc == 2)
     {
-        sprintf_s(filename, "%scenarios\\%s\\initial.csv", input_path, argv[1]);
-		if (fopen_s(&csv, filename, "r") == 1)
+        sprintf_s(filename, "%scenarios/%s/initial.csv", input_path, argv[1]);
+		csv = fopen(filename, "r");
+		if (csv == NULL)
 		{
 			perror("Abertura de arquivo de entrada initial.csv falhou. \n");
 			return 1;
@@ -30,8 +33,9 @@ int main(int argc, char** argv) {
     }
     else if (argc == 1)
     {
-		sprintf_s(filename, "%scenarios\\default\\initial.csv", input_path);
-		if (fopen_s(&csv, filename, "r") != 0)
+		sprintf_s(filename, "%scenarios/default/initial.csv", input_path);
+		csv = fopen(filename, "r");
+		if (csv == NULL)
 		{
 			perror("Abertura de arquivo de entrada initial.csv falhou. \n");
 			return 1;
@@ -39,22 +43,23 @@ int main(int argc, char** argv) {
     }
     else {
         printf_s("Uso: \n");
-        printf_s("\tcsv_to_input [nome do cenário] \n");
+        printf_s("\tcsv_to_input [nome do cenï¿½rio] \n");
         printf_s("\n");
         printf_s("Exemplos: \n");
-        printf_s("1) Usando o cenário \"Default\":\n");
+        printf_s("1) Usando o cenï¿½rio \"Default\":\n");
         printf_s("\tcsv_to_input \n");
-        printf_s("2) Usando um cenário chamado de \"HardLockdown\":\n");
+        printf_s("2) Usando um cenï¿½rio chamado de \"HardLockdown\":\n");
         printf_s("\tcsv_to_input HardLockdown\n");
         printf_s("\n");
-        printf_s("Cenário: \n");
-        printf_s("Um cenário é uma pasta dentro de input/cenarios com o nome do cenário e contendo os arquivos .csv referentes aos parâmetros da simulação que serão utilizados");
+        printf_s("Cenï¿½rio: \n");
+        printf_s("Um cenï¿½rio ï¿½ uma pasta dentro de input/cenarios com o nome do cenï¿½rio e contendo os arquivos .csv referentes aos parï¿½metros da simulaï¿½ï¿½o que serï¿½o utilizados");
         printf_s("\t\n");
         return 0;
     }
 
-    sprintf_s(filename, "%s\\generated-input.txt", input_path);
-    if (fopen_s(&output,filename, "w") != 0)
+    sprintf_s(filename, "%s/generated-input.txt", input_path);
+	output = fopen(filename, "w");
+    if (output == NULL)
 	{
 		perror("Abertura de arquivo de saida generated-input.txt falhou. \n");
 		return 1;
@@ -72,7 +77,7 @@ int main(int argc, char** argv) {
 
         const char* tok;
 		char* posn;
-        for (tok = strtok_s(line, ",", &posn); tok && *tok; tok = strtok_s(NULL, ",\n", &posn))
+        for (tok = strtok_s(line, ","); tok && *tok; tok = strtok_s(NULL, ",\n"))
         {
             fprintf_s(output, "%-15s\t", tok);
         }
@@ -84,9 +89,10 @@ int main(int argc, char** argv) {
 	// Open PARAMETERS file
     if (argc == 2)
     {
-        sprintf_s(filename, "%scenarios\\%s\\parameters.csv", input_path, argv[1]);
+        sprintf_s(filename, "%scenarios/%s/parameters.csv", input_path, argv[1]);
         printf_s("Lendo: %s\n", filename);
-        if(fopen_s(&csv, filename, "r") != 0)
+		csv = fopen(filename, "r");
+        if(csv == NULL)
 		{
 			perror("Abertura de arquivo de parametros paramenters.csv falhou. \n");
 			return 1;
@@ -94,9 +100,10 @@ int main(int argc, char** argv) {
     }
     else if(argc == 1)
     {
-        sprintf_s(filename, "%scenarios\\default\\parameters.csv", input_path);
+        sprintf_s(filename, "%scenarios/default/parameters.csv", input_path);
 		printf_s("Lendo: %s\n", filename);
-		if((err = fopen_s(&csv, filename, "r")) != 0)
+		csv = fopen(filename, "r");
+		if(csv == NULL)
 		{
 			perror("Abertura de arquivo de parametros parameters.csv falhou. \n");
 			return 1;
@@ -104,10 +111,10 @@ int main(int argc, char** argv) {
     }
     else {
         printf_s("Uso: \n");
-        printf_s("csv_to_input [nome do cenário] \n");
+        printf_s("csv_to_input [nome do cenï¿½rio] \n");
         printf_s("\t ou \n");
         printf_s("csv_to_input \n");
-        printf_s("\t (Neste caso usará o cenário default) \n");
+        printf_s("\t (Neste caso usarï¿½ o cenï¿½rio default) \n");
     }
 
 	fprintf_s(output, "\n\n");
@@ -123,7 +130,7 @@ int main(int argc, char** argv) {
 
 		const char* tok;
 		char* posn;
-		for (tok = strtok_s(line, ",", &posn); tok && *tok; tok = strtok_s(NULL, ",\n", &posn))
+		for (tok = strtok_s(line, ","); tok && *tok; tok = strtok_s(NULL, ",\n"))
 		{
 			fprintf_s(output, "%-15s\t", tok);
 		}
@@ -138,9 +145,10 @@ int main(int argc, char** argv) {
 
     if (argc == 2)
     {
-        sprintf_s(filename, "%scenarios\\%s\\beta_gama.csv", input_path,  argv[1]);
+        sprintf_s(filename, "%scenarios/%s/beta_gama.csv", input_path,  argv[1]);
         printf_s("Lendo: %s\n", filename);
-		if (fopen_s(&csv_beta_gama, filename, "r") != 0)
+		csv_beta_gama = fopen(filename, "r");
+		if (csv_beta_gama == NULL)
 		{
 			perror("Abertura de arquivo de parametros beta_gama.csv falhou. \n");
 			return 1;
@@ -148,21 +156,22 @@ int main(int argc, char** argv) {
     }
     else if (argc == 1)
     {
-        sprintf_s(filename, "%scenarios\\default\\beta_gama.csv", input_path);
+        sprintf_s(filename, "%scenarios/default/beta_gama.csv", input_path);
 		printf_s("Lendo: %s\n", filename);
-		if (fopen_s(&csv_beta_gama, filename, "r") != 0)
+		csv_beta_gama = fopen(filename, "r");
+		if (csv_beta_gama == NULL)
 		{
 			perror("Abertura de arquivo de parametros beta_gama.csv falhou. \n");
 			return 1;
 		}
-		sprintf_s(filename, "%scenarios\\default\\beta_gama.csv", input_path);
+		sprintf_s(filename, "%scenarios/default/beta_gama.csv", input_path);
     }
     else {
         printf_s("Uso: \n");
-        printf_s("csv_to_input [nome do cenário] \n");
+        printf_s("csv_to_input [nome do cenï¿½rio] \n");
         printf_s("\t ou \n");
         printf_s("csv_to_input \n");
-        printf_s("\t (Neste caso usará o cenário default) \n");
+        printf_s("\t (Neste caso usarï¿½ o cenï¿½rio default) \n");
     }
 
 	// Print gama, gama_QI, gama_QA and beta by day
@@ -174,8 +183,7 @@ int main(int argc, char** argv) {
 		char* beta_tmp = _strdup(line);
 		bool first_tok = true;
         const char* tok;
-		char *posn;
-		for (tok = strtok_s(line, ",", &posn); tok && *tok; tok = strtok_s(NULL, ",\n", &posn))
+		for (tok = strtok_s(line, ","); tok && *tok; tok = strtok(NULL, ",\n"))
 		{
 			if (first_tok) {
 				if (atoi(tok) > day) {
@@ -185,10 +193,10 @@ int main(int argc, char** argv) {
 
 					// Print GAMA
 					fprintf_s(output, "GAMA \t\t");
-					tok = strtok_s(NULL, ",\n", &posn); // Step
+					tok = strtok_s(NULL, ",\n"); // Step
 					for (int ii = 0; ii < NEA; ii++) {
 						fprintf_s(output, "%-18s ", tok);
-						tok = strtok_s(NULL, ",\n", &posn); // Step
+						tok = strtok_s(NULL, ",\n"); // Step
 					}
 					fprintf_s(output, "\n");
 
@@ -196,7 +204,7 @@ int main(int argc, char** argv) {
 					fprintf_s(output, "xI \t\t\t");
 					for (int ii = 0; ii < NEA; ii++) {
 						fprintf_s(output, "%-18s ", tok);
-						tok = strtok_s(NULL, ",\n", &posn); // Step
+						tok = strtok_s(NULL, ",\n"); // Step
 					}
 					fprintf_s(output, "\n");
 
@@ -204,7 +212,7 @@ int main(int argc, char** argv) {
 					fprintf_s(output, "xA \t\t\t");
 					for (int ii = 0; ii < NEA; ii++) {
 						fprintf_s(output, "%-18s ", tok);
-						if (ii != (NEA - 1)) tok = strtok_s(NULL, ",\n", &posn); // Step
+						if (ii != (NEA - 1)) tok = strtok_s(NULL, ",\n"); // Step
 					}
 					fprintf_s(output, "\n");
 

@@ -7,6 +7,7 @@
 
 #include "scenario.h"
 #include "models.h"
+#include "compatibility.h"
 
 #include "macros.h"
 #include "solvers.h"
@@ -22,7 +23,8 @@ int main(int argc, char** argv)
     Model::Enum model = Model::SEAIR;
     if (argc > 1)
     {
-		if (fopen_s(&input, argv[1], "r") != 0) {
+        input = fopen(argv[1], "r");
+		if (input == NULL) {
 			perror("Abertura de arquivo falhou. \n");
 			return 1;
 		}
@@ -32,8 +34,8 @@ int main(int argc, char** argv)
         printf_s("Uso: \n");
         printf_s("\tspatial_covid0d_estrat input_file [output_file] \n");
         printf_s("\nExemplos: \n");
-        printf_s("\tspatial_covid0d_estrat input\\dados.txt\n");
-        printf_s("\tspatial_covid0d_estrat input\\dados.txt output\\resultado.txt\n");
+        printf_s("\tspatial_covid0d_estrat input/dados.txt\n");
+        printf_s("\tspatial_covid0d_estrat input/dados.txt output/resultado.txt\n");
         return 0;
     }
     if (argc > 2)
@@ -42,7 +44,7 @@ int main(int argc, char** argv)
     }
     else
     {
-      sprintf_s(output_filename, "output\\result.csv");
+      sprintf_s(output_filename, "output/result.csv");
     }
     if (argc > 3)
     {
@@ -106,7 +108,7 @@ int main(int argc, char** argv)
     char title[128];
     while (read_non_comment_line(buffer, input))
     {
-        sscanf_s(buffer, "%s %d", title, (unsigned)_countof(title),  &params.day); //day
+        sscanf(buffer, "%s %d", title, &params.day); //day
         read_array_per_day(params.gama, buffer, input, params.day);
 		read_array_per_day(params.xI, buffer, input, params.day);
 		read_array_per_day(params.xA, buffer, input, params.day);

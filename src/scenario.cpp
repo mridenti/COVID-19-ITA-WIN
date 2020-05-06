@@ -1,3 +1,4 @@
+#include "compatibility.h"
 #include "scenario.h"
 #include <Eigen/Dense>
 #include <iostream>
@@ -263,7 +264,9 @@ void run_benchmark(DerivFunc derivs, double beta_scalar, ScenarioParameters *par
 int write_output(const char* filename, ScenarioOutput *o)
 {
 	FILE *result;
-	if (fopen_s(&result, filename, "w") != 0) {
+    result = fopen(filename, "w");
+    printf("%s\n", filename);
+	if (result == NULL) {
 		perror("Abertura de arquivo de saida falhou. \n");
 		return 1;
 	}
@@ -281,7 +284,7 @@ int write_output(const char* filename, ScenarioOutput *o)
 			fprintf(result, "%s_%d,", paramNames[j], k);
 		}
 	}
-	// Header do Ri mais à direita da tabela
+	// Header do Ri mais ï¿½ direita da tabela
 	fprintf(result, "Ri,");
 	for (int k = 0; k < NEA; k++)
 	{
