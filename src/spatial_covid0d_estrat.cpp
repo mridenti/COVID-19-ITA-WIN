@@ -25,7 +25,7 @@ int main(int argc, char** argv)
     {
         input = fopen(argv[1], "r");
 		if (input == NULL) {
-			perror("Abertura de arquivo falhou. \n");
+			perror("Abertura de arquivo de entrada falhou. \n");
 			return 1;
 		}
     }

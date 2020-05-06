@@ -143,7 +143,7 @@ curr_dir = os.path.abspath(os.curdir)
 print(u'Diretório de entrada (input) ' + curr_dir)
 
 # Read demographic data
-with open(demographic_file, "r") as csvfile:
+with open(demographic_file, "r", encoding="utf8", errors='ignore') as csvfile:
     spamreader = csv.reader(csvfile, delimiter=',')
     next(spamreader, None)
     j = 0
@@ -157,7 +157,7 @@ mortalidade = data_demog[1, :] / (365 * 1000)
 natalidade = data_demog[2, :]
 
 # Read epidemiologic data
-with open(epidemiologic_file, "r") as csvfile:
+with open(epidemiologic_file, "r", encoding="utf8", errors='ignore') as csvfile:
     spamreader = csv.reader(csvfile, delimiter=',')
     next(spamreader, None)
     j = 0
@@ -168,7 +168,7 @@ with open(epidemiologic_file, "r") as csvfile:
 
 # Read contact matrices
 # All
-with open(contact_matrix_all_file, "r") as csvfile:
+with open(contact_matrix_all_file, "r", encoding="utf8", errors='ignore') as csvfile:
     spamreader = csv.reader(csvfile, delimiter=',')
     next(spamreader, None)
     j = 0
@@ -178,7 +178,7 @@ with open(contact_matrix_all_file, "r") as csvfile:
         j = j + 1
 
 # Home
-with open(contact_matrix_home_file, "r") as csvfile:
+with open(contact_matrix_home_file, "r", encoding="utf8", errors='ignore') as csvfile:
     spamreader = csv.reader(csvfile, delimiter=',')
     next(spamreader, None)
     j = 0
@@ -188,7 +188,7 @@ with open(contact_matrix_home_file, "r") as csvfile:
         j = j + 1
 
 # Work
-with open(contact_matrix_work_file, "r") as csvfile:
+with open(contact_matrix_work_file, "r", encoding="utf8", errors='ignore') as csvfile:
     spamreader = csv.reader(csvfile, delimiter=',')
     next(spamreader, None)
     j = 0
@@ -198,7 +198,7 @@ with open(contact_matrix_work_file, "r") as csvfile:
         j = j + 1
 
 # School
-with open(contact_matrix_school_file, "r") as csvfile:
+with open(contact_matrix_school_file, "r", encoding="utf8", errors='ignore') as csvfile:
     spamreader = csv.reader(csvfile, delimiter=',')
     next(spamreader, None)
     j = 0
@@ -208,7 +208,7 @@ with open(contact_matrix_school_file, "r") as csvfile:
         j = j + 1
 
 # Other
-with open(contact_matrix_other_file, "r") as csvfile:
+with open(contact_matrix_other_file, "r", encoding="utf8", errors='ignore') as csvfile:
     spamreader = csv.reader(csvfile, delimiter=',')
     next(spamreader, None)
     j = 0
@@ -254,7 +254,7 @@ rel_pop = np.divide(pop, np.sum(pop))  # partitioning of the cases, for I0 > age
 I_0_vec = np.zeros(pop.size)
 I_0_vec[13] = I_0
 
-with open('initial.csv', 'wb') as csvfile:
+with open('initial.csv', 'w') as csvfile:
     spamwriter = csv.writer(csvfile)
     spamwriter.writerow(np.concatenate((['POPULATION_S'], pop)))
     spamwriter.writerow(np.concatenate((['EXPOSED_E'], I_0 * R0 * rel_pop)))
@@ -267,7 +267,7 @@ with open('initial.csv', 'wb') as csvfile:
 param_header = ['VARIAVEL', 'FAIXA_1', 'FAIXA_2', 'FAIXA_3', 'FAIXA_4', 'FAIXA_5', 'FAIXA_6', 'FAIXA_7', 'FAIXA_8',
                 'FAIXA_9', 'FAIXA_10', 'FAIXA_11', 'FAIXA_12', 'FAIXA_13', 'FAIXA_14', 'FAIXA_15', 'FAIXA_16']
 
-with open('parameters.csv', 'wb') as csvfile:
+with open('parameters.csv', 'w') as csvfile:
     spamwriter = csv.writer(csvfile)
     spamwriter.writerow(param_header)
     spamwriter.writerow(np.concatenate((['LAMBDA'], natalidade)))
@@ -430,7 +430,7 @@ space_48 = ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
             '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
             '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '']
 
-with open('beta_gama.csv', 'wb') as csvfile:
+with open('beta_gama.csv', 'w') as csvfile:
     spamwriter = csv.writer(csvfile)
     spamwriter.writerow(beta_gama_header)
     for i in range(0, age_strata):
