@@ -36,6 +36,25 @@ double sum_alpha_beta(int k, double y[][NA], ScenarioParameters *p) {
     return sum;
 }
 
+double sum_exp_beta(int k, double y[][NA], ScenarioParameters *p) {
+	double population = 0;
+	double exposed_infection = 0.4;
+	for (int i = 0; i < NEA; ++i)
+	{
+		population += y[i][Var::N];
+	}
+
+	double sum = 0.0;
+
+	for (int j = 0; j < NEA; ++j)
+	{
+		sum += p->beta[p->day][k][j] * (y[k][Var::S] / population) * y[j][Var::E];
+	}
+
+	return exposed_infection*sum;
+}
+
+
 void derivs_sir(double t, double y[][NA], double dydt[][NA], ScenarioParameters *p)
 {
     for (int k = 0; k < NEA; ++k)
@@ -107,8 +126,9 @@ void derivs_seahirq(double t, double y[][NA], double dydt[][NA], ScenarioParamet
   {
       double beta_row_sum = sum_beta(k, y, p);
       double alpha_beta_row_sum = sum_alpha_beta(k, y, p);
-      dydt[k][Var::S] = p->Lambda[k]*y[k][Var::N] -  p->mu_eq[k] * y[k][Var::S] - alpha_beta_row_sum - beta_row_sum;
-      dydt[k][Var::E] = beta_row_sum + alpha_beta_row_sum - (p->mu_eq[k] + p->a[k]) * y[k][Var::E];
+	  double exp_beta_row_sum = sum_exp_beta(k, y, p);
+	  dydt[k][Var::S] = p->Lambda[k]*y[k][Var::N] -  p->mu_eq[k] * y[k][Var::S] - alpha_beta_row_sum - beta_row_sum - exp_beta_row_sum;
+      dydt[k][Var::E] = beta_row_sum + alpha_beta_row_sum + exp_beta_row_sum  - (p->mu_eq[k] + p->a[k]) * y[k][Var::E];
 	  dydt[k][Var::A] = p->a[k] * (1.0 - p->rho[k]) * y[k][Var::E] - (p->mu_eq[k] + p->gama_RA[k] + p->gama_QA[p->day][k]) * y[k][Var::A];
 	  dydt[k][Var::I] = p->a[k] * p->rho[k] * y[k][Var::E] - (p->mu_eq[k] + p->gama_H[k] + p->gama_RI[k] + p->gama_QI[p->day][k]) * y[k][Var::I];
 	  dydt[k][Var::Qi] = p->gama_QI[p->day][k] * y[k][Var::I] - (p->gama_HQI[k] + p->mu_eq[k] + p->gama_RQI[k]) * y[k][Var::Qi];

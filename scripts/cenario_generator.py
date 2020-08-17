@@ -6,6 +6,8 @@ import sys
 import argparse
 from scipy.sparse.linalg import eigs
 
+nu_exp = 0.4  # exposed contamination
+
 
 #### Some function definition
 def symmetrize(matrix_C, PP, age_n):
@@ -40,6 +42,8 @@ def pick_intervention(itv_ic, *arg):
         return arg[9]
     elif itv_ic == 10:
         return arg[10]
+    elif itv_ic == 11:
+        return arg[11]
     else:
         return arg[0]
 
@@ -49,14 +53,14 @@ def pick_intervention(itv_ic, *arg):
 parser = argparse.ArgumentParser(description='This script computes the scenario matrices and other inputs for '
                                              'csv_to_input.')
 parser.add_argument('-i', '--input_file', help='Input file name', required=True)
-parser.add_argument('-d', '--day', type=int, nargs=4, help='Days of measure beginning - four values required',
+parser.add_argument('-d', '--day', type=float, nargs=4, help='Days of measure beginning - four values required',
                     required=True)
 parser.add_argument('-m', '--model', type=int, help='(0) SIR, (1) SEIR, (2) SEAIR, (3) SEAHIR - default is SEAHIR ',
                     required=True)
 parser.add_argument('-I0', '--I0_value', type=float, help='Number of initial infected', required=True)
 parser.add_argument('-R0', '--R0_value', type=float, help='Multiplication number', required=True)
 parser.add_argument('-Rp', '--R0_post', type=float, help='Post outbreak multiplication number', required=True)
-parser.add_argument('-epi', '--epi_value', type=float, help='Contagion decrease due to epi - 0.8 for 20% decrease',
+parser.add_argument('-p', '--prob', type=float, nargs=4, help='Overall transmission probability decrease',
                     required=True)
 parser.add_argument('-itv', '--intervention', type=int, nargs=4, help='Four integer numbers, each representing an '
                                                                       'intervention case. See README file for '
@@ -67,6 +71,9 @@ parser.add_argument('-f', '--fatality', type=float, help='Factor that multiplies
                     required=False)
 parser.add_argument('-s', action='store_true', help='If set, this argument print the equivalent Rt of each scenario',
                     required=False)
+parser.add_argument('-ex', type=int, nargs=2, help='Extra intervention case. Require the intervention code and '
+                                                   'then the date. See README file for intervention table.',
+                    required=False)
 
 args = parser.parse_args()
 
@@ -74,13 +81,13 @@ args = parser.parse_args()
 print ("Input file: %s" % args.input_file)
 print ("Days: %s" % args.day)
 print ("Model: %s" % args.model)
-print ("I0: %s" % args.I0_value)
+print ("I0:%s" % args.I0_value)
 print ("R0: %s" % args.R0_value)
-print ("Correction post: %s" % args.epi_value)
+print ("Correction post: %s" % args.prob)
 print ("Intervention cases: %s" % args.intervention)
 
 if args.fatality is None:
-    f_fac = 1.0
+    f_fac = 2.2
 else:
     f_fac = float(args.fatality)
 
@@ -88,13 +95,17 @@ I_0 = int(args.I0_value)
 R0 = float(args.R0_value)
 R0_post = float(args.R0_post)
 model = int(args.model)
-day_init = int(args.day[0])
-day_next_1 = int(args.day[1])
-day_next_2 = int(args.day[2])
-day_next_3 = int(args.day[3])
+day_init = float(args.day[0])
+day_next_1 = float(args.day[1])
+day_next_2 = float(args.day[2])
+day_next_3 = float(args.day[3])
 itv_list = [int(args.intervention[0]), int(args.intervention[1]), int(args.intervention[2]), int(args.intervention[3])]
 input_folder = args.input_file
-epi_f = float(args.epi_value)  # protection decrease of transmission probability
+prob_t = np.ones(4, dtype=np.float64)  # protection decrease of transmission probability
+prob_t[0] = float(args.prob[0])  # protection decrease of transmission probability
+prob_t[1] = float(args.prob[1])
+prob_t[2] = float(args.prob[2])
+prob_t[3] = float(args.prob[3])
 
 age_strata = 16
 t_days = 400
@@ -244,7 +255,7 @@ gamma_QI = np.divide(np.multiply(xI, gamma_H + gamma_RI), (1 - xI))
 gamma_QA = np.divide(np.multiply(xA, gamma_RA), (1 - xA))
 tlc = np.divide(TC, phi)
 if model == 3:
-    mu_cov = np.divide(np.multiply(gamma, f_fac * tlc), 1 - f_fac * tlc)
+    mu_cov = np.multiply(np.divide(f_fac*TC, phi), gamma_H + gamma_RI)
 else:
     mu_cov = np.divide(np.multiply(gamma, f_fac * TC), 1 - f_fac * TC)
 
@@ -320,6 +331,8 @@ eig_value = np.real(w.max())
 if model == 2 or 3:
     beta = R0 * gamma[0] / (rho.max() + np.mean(alpha) * (1 - rho.max())) / eig_value
     beta_val = R0 * gamma[0] / (rho.max() + np.mean(alpha) * (1 - rho.max()))
+elif model == 3:
+    beta = R0 * gamma[0] / (rho.max() + np.mean(alpha) * (1 - rho.max()) + gamma[0] * nu_exp / a[0]) / eig_value
 else:
     beta = R0 * gamma[0]
 C_all_pre = beta * C_sym * age_strata  ## itv_id = 0
@@ -331,13 +344,15 @@ C_other_pre = beta * C_sym_other * age_strata
 if model == 2 or model == 3:
     beta = R0_post * gamma[0] / (rho.max() + np.mean(alpha) * (1 - rho.max())) / eig_value
     beta_val = R0_post * gamma[0] / (rho.max() + np.mean(alpha) * (1 - rho.max()))
+elif model == 3:
+    beta = R0 * gamma[0] / (rho.max() + np.mean(alpha) * (1 - rho.max()) + gamma[0] * nu_exp / a[0]) / eig_value
 else:
     beta = R0 * gamma[0]
 
-C_home_post = epi_f * beta * C_sym_home * age_strata
-C_work_post = epi_f * beta * C_sym_work * age_strata
-C_school_post = epi_f * beta * C_sym_school * age_strata
-C_other_post = epi_f * beta * C_sym_other * age_strata
+C_home_post = beta * C_sym_home * age_strata
+C_work_post = beta * C_sym_work * age_strata
+C_school_post = beta * C_sym_school * age_strata
+C_other_post = beta * C_sym_other * age_strata
 C_all_post = C_home_post + C_work_post + C_school_post + C_other_post  ## itv_id = 1
 
 # Build matrix for scenarios
@@ -346,8 +361,10 @@ A_home = np.diag(np.ones(age_strata))
 B_other = np.diag(np.ones(age_strata))
 B_school = np.diag(np.ones(age_strata))
 B_lock = np.diag(np.ones(age_strata))
+B_strong_lock = np.diag(np.ones(age_strata))
 W_work = np.diag(np.ones(age_strata))
 W_lock = np.diag(np.ones(age_strata))
+W_strong_lock = np.diag(np.ones(age_strata))
 for i in range(age_strata - 5, age_strata):
     I_old[i, i] = 0.1
 for i in range(0, 4):
@@ -361,13 +378,19 @@ for i in range(0, 4):
 for i in range(4, age_strata):
     B_other[i, i] = 0.6
 for i in range(0, 4):
-    B_lock[i, i] = 0.2
-for i in range(4, age_strata):
     B_lock[i, i] = 0.3
+for i in range(4, age_strata):
+    B_lock[i, i] = 0.5
+for i in range(0, 4):
+    B_strong_lock[i, i] = 0.1
+for i in range(4, age_strata):
+    B_strong_lock[i, i] = 0.1
 for i in range(0, age_strata):
     W_work[i, i] = 0.5
 for i in range(0, age_strata):
-    W_lock[i, i] = 0.3
+    W_lock[i, i] = 0.4
+for i in range(0, age_strata):
+    W_strong_lock[i, i] = 0.3
 
 # Fechamento de escolas apenas
 C_all_school = np.dot(A_home, C_home_post) + C_work_post + np.dot(B_school, C_other_post)
@@ -399,26 +422,41 @@ C_all_old_school_other_work = np.dot(A_home, C_home_post) + np.dot(W_work, C_wor
 # Lockdown com isolamento de idoso
 C_all_old_lock = np.dot(A_home, C_home_post) + np.dot(W_lock, C_work_old) + np.dot(B_lock, C_other_old)
 
+# Lockdown com isolamento de idoso
+C_all_old_strong_lock = np.dot(A_home, C_home_post) + np.dot(W_strong_lock, C_work_old) + np.dot(B_strong_lock,
+                                                                                                 C_other_old)
+
 # Escolhe as matrizes de intervenção
-matrix_0 = pick_intervention(itv_list[0], C_all_pre, C_all_post, C_all_school, C_all_school_other,
-                             C_all_school_other_work, C_all_lock, C_all_old, C_all_old_school,
-                             C_all_old_school_other, C_all_old_school_other_work, C_all_old_lock)
-matrix_1 = pick_intervention(itv_list[1], C_all_pre, C_all_post, C_all_school, C_all_school_other,
-                             C_all_school_other_work, C_all_lock, C_all_old, C_all_old_school,
-                             C_all_old_school_other, C_all_old_school_other_work, C_all_old_lock)
-matrix_2 = pick_intervention(itv_list[2], C_all_pre, C_all_post, C_all_school, C_all_school_other,
-                             C_all_school_other_work, C_all_lock, C_all_old, C_all_old_school,
-                             C_all_old_school_other, C_all_old_school_other_work, C_all_old_lock)
-matrix_3 = pick_intervention(itv_list[3], C_all_pre, C_all_post, C_all_school, C_all_school_other,
-                             C_all_school_other_work, C_all_lock, C_all_old, C_all_old_school,
-                             C_all_old_school_other, C_all_old_school_other_work, C_all_old_lock)
+matrix_0 = prob_t[0] * pick_intervention(itv_list[0], C_all_pre, C_all_post, C_all_school, C_all_school_other,
+                                         C_all_school_other_work, C_all_lock, C_all_old, C_all_old_school,
+                                         C_all_old_school_other, C_all_old_school_other_work, C_all_old_lock,
+                                         C_all_old_strong_lock)
+matrix_1 = prob_t[1] * pick_intervention(itv_list[1], C_all_pre, C_all_post, C_all_school, C_all_school_other,
+                                         C_all_school_other_work, C_all_lock, C_all_old, C_all_old_school,
+                                         C_all_old_school_other, C_all_old_school_other_work, C_all_old_lock,
+                                         C_all_old_strong_lock)
+matrix_2 = prob_t[2] * pick_intervention(itv_list[2], C_all_pre, C_all_post, C_all_school, C_all_school_other,
+                                         C_all_school_other_work, C_all_lock, C_all_old, C_all_old_school,
+                                         C_all_old_school_other, C_all_old_school_other_work, C_all_old_lock,
+                                         C_all_old_strong_lock)
+matrix_3 = prob_t[3] * pick_intervention(itv_list[3], C_all_pre, C_all_post, C_all_school, C_all_school_other,
+                                         C_all_school_other_work, C_all_lock, C_all_old, C_all_old_school,
+                                         C_all_old_school_other, C_all_old_school_other_work, C_all_old_lock,
+                                         C_all_old_strong_lock)
+if args.ex is not None:
+    opt_ex = int(args.ex[0])
+    day_next_4 = int(args.ex[1])
+    matrix_4 = prob_t[3] * pick_intervention(opt_ex, C_all_pre, C_all_post, C_all_school, C_all_school_other,
+                                             C_all_school_other_work, C_all_lock, C_all_old, C_all_old_school,
+                                             C_all_old_school_other, C_all_old_school_other_work, C_all_old_lock,
+                                             C_all_old_strong_lock)
 
 beta_gama_header = ['DAY', 'GAMA_F1', 'GAMA_F2', 'GAMA_F3', 'GAMA_F4', 'GAMA_F5', 'GAMA_F6', 'GAMA_F7', 'GAMA_F8',
                     'GAMA_F9', 'GAMA_F10', 'GAMA_F11', 'GAMA_F12', 'GAMA_F13', 'GAMA_F14', 'GAMA_F15', 'GAMA_F16',
                     'xI_F1', 'xI_F2', 'xI_F3', 'xI_F4', 'xI_F5', 'xI_F6', 'xI_F7',
                     'xI_F8', 'xI_F9', 'xI_F10', 'xI_F11', 'xI_F12', 'xI_F13',
                     'xI_F14', 'xI_F15', 'xI_F16',
-                    'xA_F1', 'xA_F2', 'xA_F3', 'xA_F4', 'xA_F5', 'xA_F6', 'xA_F7',
+                    'xA_F1', 'xA_F2', 'xA_F3', 'xA_F4', 'xA_F5', 'xA_F6', 'xA_F-',
                     'xA_F8', 'xA_F9', 'xA_F10', 'xA_F11', 'xA_F12', 'xA_F13',
                     'xA_F14', 'xA_F15', 'xA_F16',
                     'BETA_MATRIX', 'BETA_MATRIX', 'BETA_MATRIX', 'BETA_MATRIX', 'BETA_MATRIX', 'BETA_MATRIX',
@@ -456,6 +494,12 @@ with open('beta_gama.csv', 'wb') as csvfile:
             spamwriter.writerow(np.concatenate(([day_next_3], gamma, xI, xA, matrix_3[i, :])))
         else:
             spamwriter.writerow(np.concatenate(([day_next_3], space_48, matrix_3[i, :])))
+    if args.ex is not None:
+        for i in range(0, age_strata):
+            if i == 0:
+                spamwriter.writerow(np.concatenate(([day_next_4], gamma, xI, xA, matrix_4[i, :])))
+            else:
+                spamwriter.writerow(np.concatenate(([day_next_4], space_48, matrix_4[i, :])))
 
 print(u'Voltando para o diretório de script')
 os.chdir("..")
@@ -465,12 +509,25 @@ os.chdir("scripts")
 
 if args.s is True:
     w, v = eigs(matrix_1)
-    R1 = (np.real(w.max()) / age_strata) * (rho.max() + np.mean(alpha) * (1 - rho.max())) / gamma[0]
-    w, v = eigs(matrix_2)
-    R2 = (np.real(w.max()) / age_strata) * (rho.max() + np.mean(alpha) * (1 - rho.max())) / gamma[0]
-    w, v = eigs(matrix_3)
-    R3 = (np.real(w.max()) / age_strata) * (rho.max() + np.mean(alpha) * (1 - rho.max())) / gamma[0]
+    R1 = (np.real(w.max()) / age_strata) * (rho.max() + np.mean(alpha) * (1 - rho.max()) + gamma[0] * nu_exp / a[0]) / \
+         gamma[0]
+    w, _ = eigs(matrix_2)
+    R2 = (np.real(w.max()) / age_strata) * (rho.max() + np.mean(alpha) * (1 - rho.max()) + gamma[0] * nu_exp / a[0]) / \
+         gamma[0]
+    w, _ = eigs(matrix_3)
+    R3 = (np.real(w.max()) / age_strata) * (rho.max() + np.mean(alpha) * (1 - rho.max()) + gamma[0] * nu_exp / a[0]) / \
+         gamma[0]
     print('R0 value is: ', R0)
     print('R1 value is: ', R1)
     print('R2 value is: ', R2)
     print('R3 value is: ', R3)
+    os.chdir("..")
+    os.chdir(os.path.join('input', 'cenarios', input_folder))
+    with open('optimized_parameters.csv', 'wb') as csvfile:
+        spamwriter = csv.writer(csvfile)
+        spamwriter.writerow(['R0_post', str(R1), str(R2), str(R3)])
+    # Return to script directory
+    os.chdir("..")
+    os.chdir("..")
+    os.chdir("..")
+    os.chdir("scripts")

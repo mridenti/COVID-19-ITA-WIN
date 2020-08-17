@@ -6,12 +6,30 @@ import csv
 import os
 import subprocess
 import datetime
+import argparse
+
+##### Process command line options
+##### Variable parameters, for error estimation within reasonable bounds
+parser = argparse.ArgumentParser(description=u'This script plots the projection under set A of interventions.')
+parser.add_argument('-d', '--day', type=int, help='Day of first intervention',
+                    required=True)
+parser.add_argument('-b', '--beds', type=int, help='Available ICUs beds',
+                    required=False)
+parser.add_argument('-o', '--output_file', help='Dummy file to output intermediary results', required=True)
+parser.add_argument('-sc', '--scenario', help='Scenario folder', required=True)
+parser.add_argument('-i', '--init_date', type=int, nargs=3, help='Date of the first day of notification [dat], [month],'
+                                                                 '[year]', required=True)
+parser.add_argument('-p', '--prob', type=float, nargs=4, help='Transmission probability attenuation factor',
+                    required=True)
+parser.add_argument('-ni', '--initial_infected', type=float, help='Initial number of infected', required=True)
+
+args = parser.parse_args()
 
 # Output file - this should be fixed
-output_file = 'result_data_SP_CAPITAL_explore.csv'
+output_file = args.output_file
 
 # Cenario folder
-cenario_folder = 'cenarioSP_Capital'
+cenario_folder = args.scenario
 
 # Number of age groups
 age_strata = 16
@@ -22,44 +40,96 @@ t_days = 400
 # Number of compartments in the output file
 compartments = 11
 
+# Initial number of infected
+ni = args.initial_infected
+
 # Time specifications for plot
 months = mdates.MonthLocator()  # every month
 weeks = mdates.WeekdayLocator()  # every week
 month_fmt = mdates.DateFormatter('%b')
 
-#SJC
-#leitos = 280
-#SP Capital
-leitos = 4861
-# Manaus
-#leitos = 463
-
-# São Paulo Capital
+# Days of transition
 day_init = 0
-day_next_1 = 25
-day_next_2 = 74
-day_next_3 = 125
-day_last = 151
-year = 2020
-month = 2
-day = 26
+day_next_1 = int(args.day)
+day = int(args.init_date[0])
+month = int(args.init_date[1])
+year = int(args.init_date[2])
 
-# São José dos Campos
-#day_init = 0
-#day_next_1 = 21
-#day_next_2 = 53
-#day_next_3 = 104
-#day_last = 135
+temp_date = datetime.date(2020, 05, 10) - datetime.date(year, month, day)
+day_next_2 = temp_date.days
+temp_date = datetime.date(2020, 06, 30) - datetime.date(year, month, day)
+day_next_3 = temp_date.days
+temp_date = datetime.date(2020, 07, 31) - datetime.date(year, month, day)
+day_last = temp_date.days
 
-# Manaus
-#day_init = 0
-#day_next_1 = 9
-#day_next_2 = 58
-#day_next_3 = 109
-#day_last = 140
-#year = 2020
-#month = 3
-#day = 13
+# ICU beds
+leitos = int(args.beds)
+
+g_e0 = float(args.prob[0])
+g_e1 = float(args.prob[1])
+g_e2 = float(args.prob[2])
+g_e3 = float(args.prob[3])
+
+# Read optimal parameters and uncertainties
+os.chdir("..")
+os.chdir(os.path.join('input', 'cenarios', cenario_folder))
+with open('optimized_parameters.csv', 'r') as csvfile:
+    Spamreader = csv.reader(csvfile, delimiter=',')
+    j = 0
+    for Row in Spamreader:
+        if j == 0:
+            r0_post = float(Row[1])
+            j = j + 1
+        elif j == 1:
+            r_0 = float(Row[1])
+            j = j + 1
+        elif j == 2:
+            r_0m = float(Row[1])
+            j = j + 1
+        elif j == 3:
+            r_0p = float(Row[1])
+            j = j + 1
+        elif j == 4:
+            g_s = float(Row[1])
+            j = j + 1
+        elif j == 5:
+            g_sm = float(Row[1])
+            j = j + 1
+        elif j == 6:
+            g_sp = float(Row[1])
+            j = j + 1
+        elif j == 7:
+            g_e = float(Row[1])
+            j = j + 1
+        elif j == 8:
+            g_em = float(Row[1])
+            j = j + 1
+        elif j == 9:
+            g_ep = float(Row[1])
+            j = j + 1
+
+if r0_post < 2.0:
+    r0_post = 2.0
+
+
+def save_fig(suffix_fig):
+    os.chdir("..")
+    my_path = os.getcwd()
+    dirs = os.path.join(my_path, 'figures', cenario_folder)
+    try:
+        os.makedirs(dirs)
+    except OSError:
+        pass
+    plt.savefig(os.path.join(dirs, cenario_folder[:] + suffix_fig), format='svg',
+                dpi=300, bbox_inches='tight')
+    os.chdir("scripts")
+    return 0
+
+# Return to script directory
+os.chdir("..")
+os.chdir("..")
+os.chdir("..")
+os.chdir("scripts")
 
 
 def read_output(out_file):
@@ -94,41 +164,12 @@ def read_output(out_file):
         return s, e, y, r, n, a, c, h, l, ri
 
 
-# Fixed post break parameters
-# SJC
-#g_s = 23
-#r_0 = 4.71
-#g_e = 0.53
-# SP Capital
-g_s = 54
-r_0 = 7.54
-g_e = 0.73
-# Manaus
-#g_s = 160
-#r_0 = 10.0
-#g_e = 0.6
-
-# Fixed outbreak parameters
-# SJC
-#g_s0 = 23
-#r_00 = 4.71
-#g_e0 = 1.00
-# SP Capital
-g_s0 = 54
-r_00 = 7.54
-g_e0 = 1.0
-#Manaus
-#g_s0 = 160
-#r_00 = 10.0
-#g_e0 = 1.0
-
-
 # First scenario
-# Lock, never relax until the 31 of july
+# Lock, never relax until the 31 of July
 subprocess.call(['python', 'cenario_generator.py', '-i', cenario_folder, '-d', str(day_init), str(day_next_1),
                  str(day_next_2), str(day_next_3), '-m', '3',
-                 '-I0', str(g_s), '-R0', str(r_0), '-Rp', str(r_0), '-epi', str(g_e),
-                 '-itv', '0', '10', '10', '0', '-s'])
+                 '-I0', str(ni*g_s), '-R0', str(r_0), '-Rp', str(r_0), '-p', str(g_e0), str(g_e1), str(g_e1), str(g_e0),
+                 '-itv', '0', '10', '10', '0'])
 os.chdir("..")
 subprocess.call(['bin/csv_to_input', cenario_folder], stdout=open(os.devnull, 'wb'))
 subprocess.call(['bin/spatial_covid0d_estrat.exe', 'input/generated-input.txt', '/'.join(['output', output_file]),
@@ -138,11 +179,11 @@ s1, e1, y1, r1, n1, a1, c1, h1, l1, ri1 = read_output(output_file)
 os.chdir("..")
 os.chdir("scripts")
 
-# Lock, then relax to level 1 on 10 of may, then open on the 31 of july
+# Lock, then relax to level 1 on 10 of May, then open on the 31 of July
 subprocess.call(['python', 'cenario_generator.py', '-i', cenario_folder, '-d', str(day_init), str(day_next_1),
                  str(day_next_2), str(day_next_3), '-m', '3',
-                 '-I0', str(g_s), '-R0', str(r_0), '-Rp', str(r_0), '-epi', str(g_e),
-                 '-itv', '0', '10', '9', '0', '-s'])
+                 '-I0', str(ni*g_s), '-R0', str(r_0), '-Rp', str(r_0), '-p', str(g_e0), str(g_e1), str(g_e1), str(g_e0),
+                 '-itv', '0', '10', '9', '0'])
 os.chdir("..")
 subprocess.call(['bin/csv_to_input', cenario_folder], stdout=open(os.devnull, 'wb'))
 subprocess.call(['bin/spatial_covid0d_estrat.exe', 'input/generated-input.txt', '/'.join(['output', output_file]),
@@ -152,11 +193,11 @@ s2, e2, y2, r2, n2, a2, c2, h2, l2, ri2 = read_output(output_file)
 os.chdir("..")
 os.chdir("scripts")
 
-# Lock, then relax to level 2 on 10 of may, then open on the 31 of july
+# Lock, then relax to level 2 on 10 of May, then open on the 31 of July
 subprocess.call(['python', 'cenario_generator.py', '-i', cenario_folder, '-d', str(day_init), str(day_next_1),
                  str(day_next_2), str(day_next_3), '-m', '3',
-                 '-I0', str(g_s), '-R0', str(r_0), '-Rp', str(r_0), '-epi', str(g_e),
-                 '-itv', '0', '10', '8', '0', '-s'])
+                 '-I0', str(ni*g_s), '-R0', str(r_0), '-Rp', str(r_0), '-p', str(g_e0), str(g_e1), str(g_e1), str(g_e0),
+                 '-itv', '0', '10', '8', '0'])
 os.chdir("..")
 subprocess.call(['bin/csv_to_input', cenario_folder], stdout=open(os.devnull, 'wb'))
 subprocess.call(['bin/spatial_covid0d_estrat.exe', 'input/generated-input.txt', '/'.join(['output', output_file]),
@@ -166,11 +207,11 @@ s3, e3, y3, r3, n3, a3, c3, h3, l3, ri3 = read_output(output_file)
 os.chdir("..")
 os.chdir("scripts")
 
-# Lock, then relax to level 1 on 10 of may, relax to level 2 on 30 of june, then open on 31 of july
+# Lock, then relax to level 1 on 10 of May, relax to level 2 on 30 of June, then open on 31 of July
 subprocess.call(['python', 'cenario_generator.py', '-i', cenario_folder, '-d', str(day_init), str(day_next_1),
                  str(day_next_2), str(day_next_3), '-m', '3',
-                 '-I0', str(g_s), '-R0', str(r_0), '-Rp', str(r_0), '-epi', str(g_e),
-                 '-itv', '0', '10', '9', '8', '-s', '-ex', '0', str(day_last)])
+                 '-I0', str(ni*g_s), '-R0', str(r_0), '-Rp', str(r_0), '-p', str(g_e0), str(g_e1), str(g_e1), str(g_e1),
+                 '-itv', '0', '10', '9', '8', '-ex', '0', str(day_last)])
 os.chdir("..")
 subprocess.call(['bin/csv_to_input', cenario_folder], stdout=open(os.devnull, 'wb'))
 subprocess.call(['bin/spatial_covid0d_estrat.exe', 'input/generated-input.txt', '/'.join(['output', output_file]),
@@ -180,11 +221,11 @@ s4, e4, y4, r4, n4, a4, c4, h4, l4, ri4 = read_output(output_file)
 os.chdir("..")
 os.chdir("scripts")
 
-# Lock, then simply open on 10 of may
+# Lock, then simply open on 10 of May
 subprocess.call(['python', 'cenario_generator.py', '-i', cenario_folder, '-d', str(day_init), str(day_next_1),
                  str(day_next_2), str(day_next_3), '-m', '3',
-                 '-I0', str(g_s), '-R0', str(r_0), '-Rp', str(r_0), '-epi', str(g_e),
-                 '-itv', '0', '10', '0', '0', '-s'])
+                 '-I0', str(ni*g_s), '-R0', str(r_0), '-Rp', str(r_0), '-p', str(g_e0), str(g_e1), str(g_e0), str(g_e0),
+                 '-itv', '0', '10', '0', '0'])
 os.chdir("..")
 subprocess.call(['bin/csv_to_input', cenario_folder], stdout=open(os.devnull, 'wb'))
 subprocess.call(['bin/spatial_covid0d_estrat.exe', 'input/generated-input.txt', '/'.join(['output', output_file]),
@@ -194,11 +235,11 @@ s5, e5, y5, r5, n5, a5, c5, h5, l5, ri5 = read_output(output_file)
 os.chdir("..")
 os.chdir("scripts")
 
-# Lock until the 31 of june, then relax to level 2 until end of the year
+# Lock until the 31 of June, then relax to level 2 until end of the year
 subprocess.call(['python', 'cenario_generator.py', '-i', cenario_folder, '-d', str(day_init), str(day_next_1),
                  str(day_next_2), str(day_next_3), '-m', '3',
-                 '-I0', str(g_s), '-R0', str(r_0), '-Rp', str(r_0), '-epi', str(g_e),
-                 '-itv', '0', '10', '10', '7', '-s'])
+                 '-I0', str(ni*g_s), '-R0', str(r_0), '-Rp', str(r_0), '-p', str(g_e0), str(g_e1), str(g_e1), str(g_e1),
+                 '-itv', '0', '10', '10', '7'])
 os.chdir("..")
 subprocess.call(['bin/csv_to_input', cenario_folder], stdout=open(os.devnull, 'wb'))
 subprocess.call(['bin/spatial_covid0d_estrat.exe', 'input/generated-input.txt', '/'.join(['output', output_file]),
@@ -211,8 +252,8 @@ os.chdir("scripts")
 # Do nothing, wild behaviour scenario
 subprocess.call(['python', 'cenario_generator.py', '-i', cenario_folder, '-d', str(day_init), str(day_next_1),
                  str(day_next_2), str(day_next_3), '-m', '3',
-                 '-I0', str(g_s0), '-R0', str(r_00), '-Rp', str(r_00), '-epi', str(g_e0),
-                 '-itv', '0', '1', '1', '1', '-s'])
+                 '-I0', str(ni*g_s), '-R0', str(r_0), '-Rp', str(r_0), '-p', str(g_e0), str(g_e0), str(g_e0), str(g_e0),
+                 '-itv', '0', '1', '1', '1'])
 os.chdir("..")
 subprocess.call(['bin/csv_to_input', cenario_folder], stdout=open(os.devnull, 'wb'))
 subprocess.call(['bin/spatial_covid0d_estrat.exe', 'input/generated-input.txt', '/'.join(['output', output_file]),
@@ -234,7 +275,6 @@ C1 = np.sum(c1, axis=1)
 H1 = np.sum(h1, axis=1)
 L1 = np.sum(l1, axis=1)
 RI1 = np.sum(ri1, axis=1)
-Ac1 = C1 + RI1 + I1
 
 S2 = np.sum(s2, axis=1)
 E2 = np.sum(e2, axis=1)
@@ -246,7 +286,6 @@ C2 = np.sum(c2, axis=1)
 H2 = np.sum(h2, axis=1)
 L2 = np.sum(l2, axis=1)
 RI2 = np.sum(ri2, axis=1)
-Ac2 = C2 + RI2 + I2
 
 S3 = np.sum(s3, axis=1)
 E3 = np.sum(e3, axis=1)
@@ -258,7 +297,6 @@ C3 = np.sum(c3, axis=1)
 H3 = np.sum(h3, axis=1)
 L3 = np.sum(l3, axis=1)
 RI3 = np.sum(ri3, axis=1)
-Ac3 = C3 + RI3 + I3
 
 S4 = np.sum(s4, axis=1)
 E4 = np.sum(e4, axis=1)
@@ -270,7 +308,6 @@ C4 = np.sum(c4, axis=1)
 H4 = np.sum(h4, axis=1)
 L4 = np.sum(l4, axis=1)
 RI4 = np.sum(ri4, axis=1)
-Ac4 = C4 + RI4 + I4
 
 S5 = np.sum(s5, axis=1)
 E5 = np.sum(e5, axis=1)
@@ -282,7 +319,6 @@ C5 = np.sum(c5, axis=1)
 H5 = np.sum(h5, axis=1)
 L5 = np.sum(l5, axis=1)
 RI5 = np.sum(ri5, axis=1)
-Ac5 = C5 + RI5 + I5
 
 S6 = np.sum(s6, axis=1)
 E6 = np.sum(e6, axis=1)
@@ -294,7 +330,6 @@ C6 = np.sum(c6, axis=1)
 H6 = np.sum(h6, axis=1)
 L6 = np.sum(l6, axis=1)
 RI6 = np.sum(ri6, axis=1)
-Ac6 = C6 + RI6 + I6
 
 S0 = np.sum(s0, axis=1)
 E0 = np.sum(e0, axis=1)
@@ -306,9 +341,8 @@ C0 = np.sum(c0, axis=1)
 H0 = np.sum(h0, axis=1)
 L0 = np.sum(l0, axis=1)
 RI0 = np.sum(ri0, axis=1)
-Ac0 = C0 + RI0 + I0
 
-# Plot dos gráficos
+# Plot
 t_array = np.linspace(0, t_days - 1, t_days, dtype=int)
 tempDate = datetime.datetime(year, month, day)
 t_dates = (tempDate + t_array*datetime.timedelta(days=1))
@@ -316,18 +350,18 @@ day_1 = (tempDate + day_next_1*datetime.timedelta(days=1))
 day_2 = (tempDate + day_next_2*datetime.timedelta(days=1))
 day_3 = (tempDate + day_next_3*datetime.timedelta(days=1))
 
-fig, ax = plt.subplots()
+_, ax = plt.subplots(figsize=(9, 6))
 plt.axvline(day_1, linestyle='--', linewidth=1.0, color='black')
 plt.axvline(day_2, linestyle='--', linewidth=1.0, color='black')
 plt.axvline(day_3, linestyle='--', linewidth=1.0, color='black')
-plt.plot(t_dates, I1, '-', color='blue', label=u'Lock down until the 30 of june')
-plt.plot(t_dates, I6, '-', color='orange', label=u'Lock down until the 30 of june, \n then relax to level 3 until the '
+plt.plot(t_dates, I1, '-', color='blue', label=u'Level 0 until 30th of June')
+plt.plot(t_dates, I6, '-', color='orange', label=u'Level 0 until 30th of June, \n then relax to level 3 until the '
                                                  u'end of the year')
-plt.plot(t_dates, I2, '-', color='m', label=u'Lock down until the 10 of may, level 1 until the 30 of june')
-plt.plot(t_dates, I4, '-', color='y', label=u'Lock down until the 10 of may, relax to level 1 \n until the 30 of june, '
-                                            u'relax to level 2 until the 31 of july')
-plt.plot(t_dates, I3, '-', color='green', label=u'Lock down until the 10 of may, level 2 until the 30 of june')
-plt.plot(t_dates, I5, '-', color='red', label=u'Simply open on the 10 of may')
+plt.plot(t_dates, I2, '-', color='m', label=u'Level 0 until 10th of May, level 1 until 30th of June')
+plt.plot(t_dates, I4, '-', color='y', label=u'Level 0 until 10th of May, relax to level 1 \n until 30th of June, '
+                                            u'relax to level 2 until 31th of July')
+plt.plot(t_dates, I3, '-', color='green', label=u'Level 0 until 10th of May, level 2 until 30th of June')
+plt.plot(t_dates, I5, '-', color='red', label=u'Simply open on 10th of May')
 plt.plot(t_dates, I0, '-', color='black', label=u'Do-nothing scenario')
 plt.xlim([datetime.date(year, month, day), datetime.date(2020, 12, 31)])
 ax.xaxis.set_major_locator(months)
@@ -336,18 +370,20 @@ ax.xaxis.set_major_formatter(month_fmt)
 plt.ylabel(u'individuals')
 plt.legend(loc='upper right', fontsize='small', framealpha=0.1, fancybox=True)
 
-fig, ax = plt.subplots()
+save_fig('_scenarioB_infected.svg')
+
+_, ax = plt.subplots(figsize=(9, 6))
 plt.axvline(day_1, linestyle='--', linewidth=1.0, color='black')
 plt.axvline(day_2, linestyle='--', linewidth=1.0, color='black')
 plt.axvline(day_3, linestyle='--', linewidth=1.0, color='black')
-plt.plot(t_dates, C1, '-', color='blue', label=u'Lock down until the 30 of june')
-plt.plot(t_dates, C6, '-', color='orange', label=u'Lock down until the 30 of june, \n then relax to level 3 until the '
+plt.plot(t_dates, C1, '-', color='blue', label=u'Level 0 until 30th of June')
+plt.plot(t_dates, C6, '-', color='orange', label=u'Level 0 until 30th of June, \n then relax to level 3 until the '
                                                  u'end of the year')
-plt.plot(t_dates, C2, '-', color='m', label=u'Lock down until the 10 of may, level 1 until the 30 of june')
-plt.plot(t_dates, C4, '-', color='y', label=u'Lock down until the 10 of may, relax to level 1 \n until the 30 of june, '
-                                            u'relax to level 2 until the 31 of july')
-plt.plot(t_dates, C3, '-', color='green', label=u'Lock down until the 10 of may, level 2 until the 30 of june')
-plt.plot(t_dates, C5, '-', color='red', label=u'Simply open on the 10 of may')
+plt.plot(t_dates, C2, '-', color='m', label=u'Level 0 until 10th of May, level 1 until 30th of June')
+plt.plot(t_dates, C4, '-', color='y', label=u'Level 0 until 10th of May, relax to level 1 \n until 30th of June, '
+                                            u'relax to level 2 until 31th of July')
+plt.plot(t_dates, C3, '-', color='green', label=u'Level 0 until 10th of May, level 2 until 30th of June')
+plt.plot(t_dates, C5, '-', color='red', label=u'Simply open on 10th of May')
 plt.plot(t_dates, C0, '-', color='black', label=u'Do-nothing scenario')
 plt.xlim([datetime.date(year, month, day), datetime.date(2020, 12, 31)])
 ax.xaxis.set_major_locator(months)
@@ -355,21 +391,23 @@ ax.xaxis.set_minor_locator(weeks)
 ax.xaxis.set_major_formatter(month_fmt)
 plt.xlabel(u'days')
 plt.ylabel(u'individuals')
-plt.legend(loc='upper left', fontsize='small', framealpha=0.1, fancybox=True)
+plt.legend(loc='lower right', fontsize='small', framealpha=0.1, fancybox=True)
 
-fig, ax = plt.subplots()
+save_fig('_scenarioB_casualties.svg')
+
+_, ax = plt.subplots(figsize=(9, 6))
 plt.axvline(day_1, linestyle='--', linewidth=1.0, color='black')
 plt.axvline(day_2, linestyle='--', linewidth=1.0, color='black')
 plt.axvline(day_3, linestyle='--', linewidth=1.0, color='black')
-plt.axhline(leitos, linestyle='--', linewidth=1.0, color='red', label=u'Leitos disponíveis')
-plt.plot(t_dates, H1, '-', color='blue', label=u'Lock down until the 30 of june')
-plt.plot(t_dates, H6, '-', color='orange', label=u'Lock down until the 30 of june, \n then relax to level 3 until the '
+plt.axhline(leitos, linestyle='--', linewidth=1.0, color='red', label=u'Available ICU beds')
+plt.plot(t_dates, H1, '-', color='blue', label=u'Level 0 until 30th of June')
+plt.plot(t_dates, H6, '-', color='orange', label=u'Level 0 until 30th of June, \n then relax to level 3 until the '
                                                  u'end of the year')
-plt.plot(t_dates, H2, '-', color='m', label=u'Lock down until the 10 of may, level 1 until the 30 of june')
-plt.plot(t_dates, H4, '-', color='y', label=u'Lock down until the 10 of may, relax to level 1 \n until the 30 of june, '
-                                            u'relax to level 2 until the 31 of july')
-plt.plot(t_dates, H3, '-', color='green', label=u'Lock down until the 10 of may, level 2 until the 30 of june')
-plt.plot(t_dates, H5, '-', color='red', label=u'Simply open on the 10 of may')
+plt.plot(t_dates, H2, '-', color='m', label=u'Level 0 until 10th of May, level 1 until 30th of June')
+plt.plot(t_dates, H4, '-', color='y', label=u'Level 0 until 10th of May, relax to level 1 \n until 30th of June, '
+                                            u'relax to level 2 until 31th of July')
+plt.plot(t_dates, H3, '-', color='green', label=u'Level 0 until 10th of May, level 2 until 30th of June')
+plt.plot(t_dates, H5, '-', color='red', label=u'Simply open on 10th of May')
 plt.plot(t_dates, H0, '-', color='black', label=u'Do-nothing scenario')
 plt.plot(t_dates, L1, '--', color='blue')
 plt.plot(t_dates, L6, '--', color='orange')
@@ -386,18 +424,21 @@ plt.xlabel(u'days')
 plt.ylabel(u'individuals')
 plt.legend(loc='upper right', fontsize='small', framealpha=0.1, fancybox=True)
 
-fig, ax = plt.subplots()
+save_fig('_scenarioB_beds.svg')
+
+_, ax = plt.subplots(figsize=(9, 6))
 plt.axvline(day_1, linestyle='--', linewidth=1.0, color='black')
 plt.axvline(day_2, linestyle='--', linewidth=1.0, color='black')
 plt.axvline(day_3, linestyle='--', linewidth=1.0, color='black')
-plt.plot(t_dates, R1, '-', color='blue', label=u'Lock down until the 30 of june')
-plt.plot(t_dates, R6, '-', color='orange', label=u'Lock down until the 30 of june, \n then relax to level 3 until the '
+plt.axhline(N0[-1]*(1-1/r0_post), linestyle='--', linewidth=1.0, color='red', label='Herd immunity level')
+plt.plot(t_dates, R1, '-', color='blue', label=u'Level 0 until 30th of June')
+plt.plot(t_dates, R6, '-', color='orange', label=u'Level 0 until 30th of June, \n then relax to level 3 until the '
                                                  u'end of the year')
-plt.plot(t_dates, R2, '-', color='m', label=u'Lock down until the 10 of may, level 1 until the 30 of june')
-plt.plot(t_dates, R4, '-', color='y', label=u'Lock down until the 10 of may, relax to level 1 \n until the 30 of june, '
-                                            u'relax to level 2 until the 31 of july')
-plt.plot(t_dates, R3, '-', color='green', label=u'Lock down until the 10 of may, level 2 until the 30 of june')
-plt.plot(t_dates, R5, '-', color='red', label=u'Simply open on the 10 of may')
+plt.plot(t_dates, R2, '-', color='m', label=u'Level 0 until 10th of May, level 1 until 30th of June')
+plt.plot(t_dates, R4, '-', color='y', label=u'Level 0 until 10th of May, relax to level 1 \n until 30th of June, '
+                                            u'relax to level 2 until 31th of July')
+plt.plot(t_dates, R3, '-', color='green', label=u'Level 0 until 10th of May, level 2 until 30th of June')
+plt.plot(t_dates, R5, '-', color='red', label=u'Simply open on 10th of May')
 plt.plot(t_dates, R0, '-', color='black', label=u'Do-nothing scenario')
 plt.xlim([datetime.date(year, month, day), datetime.date(2020, 12, 31)])
 ax.xaxis.set_major_locator(months)
@@ -405,6 +446,8 @@ ax.xaxis.set_minor_locator(weeks)
 ax.xaxis.set_major_formatter(month_fmt)
 plt.xlabel(u'days')
 plt.ylabel(u'individuals')
-plt.legend(loc='upper left', fontsize='small', framealpha=0.1, fancybox=True)
+plt.legend(loc='lower right', fontsize='small', framealpha=0.1, fancybox=True)
 
-plt.show()
+save_fig('_scenarioB_recovered.svg')
+
+plt.draw()
