@@ -76,8 +76,8 @@ para os pacotes numpy e matplotlib, geralmente distribuídas na versão padrão.
 
 ## Criando/Modificando um cenário:
 Os cenários se encontram na pasta \input\cenarios. Na mesma, encontram-se as 
-pastas cenarioBR, cenarioSP e cenarioSJC, correspondendo respectivamente aos 
-cenarios do Brasil, do Estado de São Paulo e do município de São José dos Campos.
+pastas cenarioBR, cenarioSP e cenarioSaoPaulo, correspondendo respectivamente aos 
+cenarios do Brasil, do Estado de São Paulo e na capital São Paulo.
 
 Cada pasta de cenário deve conter no mínimo os arquivos: 
 ```
@@ -87,13 +87,16 @@ contact_matrix_all.csv
 contact_matrix_home.csv 
 contact_matrix_school.csv
 contact_matrix_work.csv 
-contact_matrix_other.csv  
+contact_matrix_other.csv 
+notification.csv 
 ```
 O arquivo demographic_data.csv contém especificações demográficas do cenário. 
 O arquivo epidemiology_data.csv contém os parâmetros epidemiológicos. Os arquivos
  contact_matrix_all.csv, contact_matrix_home.csv, contact_matrix_school.csv, 
  contact_matrix_work.csv e contact_matrix_other.csv contém as matrizes de 
- contato do país analisado. Esses arquivos podem e devem ser modificados para 
+ contato do país analisado. O arquivo notification.csv contém os dados de notificação de
+ morte e casos acumulados, necessários para os scripts de otimização.
+  Esses arquivos podem e devem ser modificados para 
  o estudo do impacto de variações de parâmetros sobre os resultados ou para 
  introduzir parâmetros demográficos ou epidemiológicos.   
  
@@ -109,7 +112,7 @@ onde as opções tem os seguintes significado
  ```
  cenario_generator -i [nome do folder do cenario] -d [DIA0] [DIA1] [DIA2] [DIA3] -m [MODELO#] 
 -I0 [INFECTADOS INICIAIS] -R0 [NÚMERO DE REPRODUÇÃO] -Rp [NÚMERO DE REPRODUÇÃO PÓS SURTO]
--epi [FATOR DE REDUÇÃO GLOBAL] -itv [itv_ID] [itv_ID] [itv_ID] [itv_ID]
+-p [FATOR DE REDUÇÃO GLOBAL] -itv [itv_ID] [itv_ID] [itv_ID] [itv_ID]
  ```
 Note que os dias [DIA0], [DIA1], ... etc correspondem ao início de um determinado
 bloco de intervenção. Os tipos de intervenções são passados pela opção -itv, de
@@ -128,8 +131,9 @@ acordo com tabela abaixo
 | Fech. Esc./ Isol. Idos./Dist Soc.         | 8          |
 | Fech. Esc./ Isol. Idos./Dist Soc./Trabal. | 9          |
 | Lock down                                 | 10         |
+| Lock down severo                          | 11         |
 
-A opção -epi fornece um fator de 0 a 1 que representa uma redução global 
+A opção -p fornece um fator de 0 a 1 que representa uma redução global 
 na probabiidade de transmissão, seja por medidas de uso de máscaras 
 e de higiene, seja pela redução global de contatos, em todo caso reduzindo
 o valor do R0 do surto. 
@@ -188,7 +192,7 @@ Sendos os modelos:
 
 ## Plotando resultados: 
 
-Os resultados do modelo SEAHIR podem ser plotados utilizando o script plot_output_SEAHIR_BR.py, 
+Os resultados do modelo SEAHIR podem ser plotados utilizando o script plot_output_SEAHIR.py, 
 para os resultados do cenário cenarioBR. Para isso, entre novamente na pasta
 scripts
 ```
@@ -196,20 +200,17 @@ CD scripts
 ```
 e execute, por exemplo,
 ```
-python plot_output_SEAHIR_BR -d 0 27 75 200 -s 50
+python plot_output_SEAHIR -d 0 27 75 200 -s 50 -o result_data_BR.csv -sc cenarioBR -i 16 3 2020
 ```
 onde as opções tem os seguintes significado
  ```
  plot_output_SEAHIR_BR -d [DIA0] [DIA1] [DIA2] [DIA3] -s [Fator de correção] 
+-o [arquivo .csv com os resultados da simulação] -sc [nome da pasta de input do cenário]
+-i [dia do primeiro caso] [mês do primeiro caso] [ano do primeiro caso]
  ```
 A opção -s fornece o fator de correção a multiplicar as notificações oficiais, 
-para corrigir o efeito das subnotificações.  
-
-Para plotar os resultados de São Paulo e São José dos Campos, 
-usar plot_output_SEAHIR_SP.py e plot_output_SEAHIR_SJC.py .
-
-Futuramente será construído um script geral plot_output.py para plotar qualquer 
-modelo dado um cenário/região qualquer.  
+para corrigir o efeito das subnotificações. Esse script precisa ser executado dentro
+da pasta script 
 
 # Quicktest
 
@@ -232,8 +233,8 @@ C:\[Diretório local]\COVID-19-ITA-WIN\scripts> python plot_output_SEAHIR_BR -d 
 
 # Optimização
 
-No diretório de scripts, encontram-se alguns scripts Python nomeados sim_annealing_XX.py.
-Esses scripts obtem o mínimo da função &chi;<sup>2</sup> para os parâmetros
+No diretório de scripts, encontra o script de otimização nomeado sim.py.
+Esses scripts obtém o mínimo da função &chi;<sup>2</sup> para os parâmetros
 R<sub>0</sub>, g<sub>s</sub> e g<sub>e</sub>  
 
 &chi;<sup>2</sup> = &sum;<sub>i</sub> 
@@ -241,8 +242,7 @@ R<sub>0</sub>, g<sub>s</sub> e g<sub>e</sub>
 &sum;<sub>i</sub> 
 [C(t<sub>i</sub>) - NO(t<sub>i</sub>)]<sup>2</sup>/NO(t<sub>i</sub>) 
 
-usando um algoritmo de "annealing", baseado no algoritmo Metropolis e métodos 
-estocásticos. Os parâmetro g<sub>s</sub> é o índice de subnotificação e 
+usando um algoritmo genético. Os parâmetro g<sub>s</sub> é o índice de subnotificação e 
 g<sub>e</sub> é um fator de 0 a 1 que reduz o R0 na fase pós-surto (redução da probabilidade de 
 transmissão). Os dados
 experimentais são, Ac(t<sub>i</sub>), o número de casos acumulados, e 
@@ -251,7 +251,7 @@ a incerteza dos parâmetros, calculada para um intervalo de confiança de 95%.
 
 Esses scripts devem ser executados dentro da pasta "scripts", para automaticamente 
 encontrar o caminho para executar os outros programas e scripts. É importante
-preservar a estrutura de pastas do projeto para que isso seja possível.  
-
-Para alterar os dias de intervenção e outros parâmetros, é necessário
-alterar o código do script.  
+preservar a estrutura de pastas do projeto para que isso seja possível. O script sim.py
+também tem opções, e o script run_all contém uma compilação das instruções usadas para 
+obter os resultados no trabalho submetida à revista PNAS.   
+ 
